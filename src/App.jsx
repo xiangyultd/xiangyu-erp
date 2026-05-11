@@ -368,7 +368,7 @@ const FRAMED_BASE={
   "一字四門":{stdW:2100,stdH:1900,prices:{"5mmPS板":{"白/牙色":10600,"銀色":12600,"黑色":13100},"3mmPS板":{"白/牙色":10300,"銀色":12300,"黑色":12800},"5mm強化銀霞玻貼清膜":{"白/牙色":19400,"銀色":21400,"黑色":21900},"5mm強化清玻貼清膜":{"白/牙色":16400,"銀色":18400,"黑色":18900},"5mm強化清玻貼砂膜":{"白/牙色":16400,"銀色":18400,"黑色":18900}},surW:{"5mmPS板":200,"3mmPS板":200,"5mm強化銀霞玻貼清膜":400,"5mm強化清玻貼清膜":400,"5mm強化清玻貼砂膜":400},surH:{"5mmPS板":200,"3mmPS板":200,"5mm強化銀霞玻貼清膜":400,"5mm強化清玻貼清膜":400,"5mm強化清玻貼砂膜":400}},
   "L型對開":{stdW:900,stdH:1900,prices:{"5mmPS板":{"白/牙色":10600,"銀色":12600,"黑色":13100},"3mmPS板":{"白/牙色":10300,"銀色":12300,"黑色":12800},"5mm強化銀霞玻貼清膜":{"白/牙色":19400,"銀色":21400,"黑色":21900},"5mm強化清玻貼清膜":{"白/牙色":16400,"銀色":18400,"黑色":18900},"5mm強化清玻貼砂膜":{"白/牙色":16400,"銀色":18400,"黑色":18900}},surW:{"5mmPS板":200,"3mmPS板":200,"5mm強化銀霞玻貼清膜":400,"5mm強化清玻貼清膜":400,"5mm強化清玻貼砂膜":400},surH:{"5mmPS板":200,"3mmPS板":200,"5mm強化銀霞玻貼清膜":400,"5mm強化清玻貼清膜":400,"5mm強化清玻貼砂膜":400},isL:true},
   "摺疊二門":{stdW:900,stdH:1900,prices:{"5mmPS板":{"白/牙色":8600,"銀色":10600,"黑色":11100},"3mmPS板":{"白/牙色":8300,"銀色":10300,"黑色":10800},"5mm強化銀霞玻貼清膜":{"白/牙色":15300,"銀色":17300,"黑色":17800},"5mm強化清玻貼清膜":{"白/牙色":12300,"銀色":14300,"黑色":14800},"5mm強化清玻貼砂膜":{"白/牙色":12300,"銀色":14300,"黑色":14800}},surW:{"5mmPS板":200,"3mmPS板":200,"5mm強化銀霞玻貼清膜":400,"5mm強化清玻貼清膜":400,"5mm強化清玻貼砂膜":400},surH:{"5mmPS板":200,"3mmPS板":200,"5mm強化銀霞玻貼清膜":400,"5mm強化清玻貼清膜":400,"5mm強化清玻貼砂膜":400}},
-  "圓弧型":{stdW:900,stdH:1880,prices:{"3mm PS板":{"白色":13800},"5mm強化清玻":{"白色":19800}},surW:{"3mm PS板":200,"5mm強化清玻":400},surH:{},isArc:true},
+  "圓弧型":{stdW:900,stdH:1880,prices:{"3mmPS501":{"白色":13800},"5mm強化清玻":{"白色":19800}},surW:{"3mmPS501":200,"5mm強化清玻":400},surH:{},isArc:true},
 };
 const FRAMELESS_PRICES={
   連動門:{byWidth:{130:{base:17000,fc:3000,fs:3000},150:{base:17000,fc:3500,fs:3500},160:{base:18000,fc:3500,fs:3500},170:{base:19000,fc:3500,fs:4000},180:{base:20000,fc:4000,fs:4000},190:{base:21000,fc:4500,fs:null},200:{base:22000,fc:4500,fs:null}}},
@@ -408,7 +408,7 @@ function genClientName(master,custName,area,addr){
 }
 const FRAMED_TYPES=["一字二門","一字三門","一字四門","L型對開","摺疊二門","圓弧型","固定片"];
 const FRAMELESS_TYPES=["連動門","橫拉門","開啟門"];
-const FRAMED_MATS={圓弧型:["3mm PS板","5mm強化清玻"],default:["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501","5mm強化清玻貼清膜","5mm強化清玻貼砂膜","5mm強化銀霞玻貼清膜"]};
+const FRAMED_MATS={圓弧型:["3mmPS501","5mm強化清玻"],default:["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501","5mm強化清玻貼清膜","5mm強化清玻貼砂膜","5mm強化銀霞玻貼清膜"]};
 const FRAMED_COLS={圓弧型:["白色"],default:["白色","牙色","銀色","黑色"]};
 
 function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,thresholdMm,towelBar,fourDoorFull,foldLock,arcShorten,floor,hasElevator,installType,fixplateFee,region,master}){
@@ -424,7 +424,7 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   if(!cfg.isArc){extraH=Math.ceil(Math.max(0,hR-cfg.stdH)/100)*surH;}
   let prod=base+extraW+extraH;
   if(fourDoorFull)prod+=500;if(foldLock)prod+=1000;
-  if(arcShorten&&doorType==="圓弧型"&&material==="3mm PS板")prod+=500;
+  if(arcShorten&&doorType==="圓弧型"&&material==="3mmPS501")prod+=500;
   const thrPrice=hasThreshold&&thresholdMm>0?Math.round(thresholdMm/10)*10*10:0;
   const towelPrice=(towelBar||0)*200;
   const feeKey=installType==="含拆舊"?"拆裝":installType==="純寄送"?null:"安裝";
@@ -462,7 +462,7 @@ function QTag({children,color}){return(<span style={{background:color+"22",color
 function QSection({title,children,accent}){return(<div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}><div style={{background:accent?"#1a1a1a":"#f0efe9",color:accent?"#f5f4f0":"#1a1a1a",padding:"9px 15px",fontWeight:700,fontSize:13,letterSpacing:1}}>{title}</div><div style={{padding:"11px 15px",display:"flex",flexDirection:"column",gap:9}}>{children}</div></div>);}
 function QLineItem({label,value}){return(<div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:"#444"}}>{label}</span><span style={{fontWeight:500}}>${fmtMoney(value)}</span></div>);}
 
-function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度"};}
+function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:""};}
 
 function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove,canRemove}){
   const s=(k,v)=>onUpdate({...item,[k]:v});
@@ -542,6 +542,11 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
             </div>
           </QRow>
           <QRow label="顏色"><QToggle value={item.col} onChange={v=>s("col",v)} options={cols}/></QRow>
+          {(()=>{
+            const dirOpts=item.dt==="一字二門"||item.dt==="一字三門"||item.dt==="一字四門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="固定片"?["左固","右固"]:null;
+            if(!dirOpts)return null;
+            return <QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>s("direction",v)} options={dirOpts}/></QRow>;
+          })()}
         </>}
         <QRow label="尺寸（mm）">
           {item.dt==="L型對開"?<><span style={{fontSize:12}}>W1</span><QInput type="number" value={item.wMm} onChange={e=>s("wMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/><span style={{fontSize:12}}>W2</span><QInput type="number" value={item.wMm2} onChange={e=>s("wMm2",Number(e.target.value))} min={100} max={3000} style={{width:90}}/></>:<><span style={{fontSize:12}}>W</span><QInput type="number" value={item.wMm} onChange={e=>s("wMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/></>}
@@ -603,10 +608,15 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
     const wReal=wDeduct>0?(item.wMm/10-wDeduct).toFixed(1):null;
     const isFixedPlate=item.dt==="固定片";
     const isAddon=item.cat==="加購品";
+    const hasDirOpts=["一字二門","一字三門","一字四門","摺疊二門","固定片"].includes(item.dt);
+    const dir=hasDirOpts?(item.direction||""):null;
+    const towelText=item.towel===1?"加一支把手":item.towel>=2?"加內外把手":"";
+    const dirLine=[dir,towelText].filter(Boolean).join(" ");
     return(
       <div style={{flex:1,minWidth:0,padding:"8px 12px"}}>
         <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>{isAddon?(item.addonType==="自填"?item.addonName:item.addonType):item.dt}</div>
         {!isAddon&&<div style={{fontSize:12,color:"#333",marginBottom:2}}>{item.mat} / {item.col}</div>}
+        {dirLine&&<div style={{fontSize:12,color:"#333",marginBottom:2}}>{dirLine}</div>}
         {!isAddon&&!isFixedPlate&&<div style={{fontSize:13,fontWeight:600,marginBottom:2}}>
           W{(item.wMm/10).toFixed(0)} × H{(item.hMm/10).toFixed(0)}
           {wDeduct>0&&<span style={{color:"#dc2626",marginLeft:6}}>→ 下單W{wReal}</span>}
