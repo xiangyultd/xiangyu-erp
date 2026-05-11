@@ -1,5 +1,21 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 
+// Supabase 初始化
+const SUPABASE_URL="https://zbnijokwqjpczhmifzia.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpibmlqb2t3cWpwY3pobWlmemlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTQxNjYsImV4cCI6MjA5MzQ3MDE2Nn0.vs2B3nIOIfLWadPWm5hrMvEOSAAx1GuqTxPtBMh5spI";
+async function sbFetch(table,method="GET",body=null,match=null){
+  let url=SUPABASE_URL+"/rest/v1/"+table;
+  if(match)url+="?"+Object.entries(match).map(([k,v])=>k+"=eq."+v).join("&");
+  const res=await fetch(url,{method,headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":method==="POST"?"resolution=merge-duplicates":""},body:body?JSON.stringify(body):null});
+  if(method==="GET")return res.json();
+  return res.ok;
+}
+const sb={
+  getAll:(table)=>sbFetch(table),
+  upsert:(table,data)=>sbFetch(table,"POST",data),
+  delete:(table,id)=>sbFetch(table,"DELETE",null,{id}),
+};
+
 const ff = "'Noto Sans TC','PingFang TC',sans-serif";
 const HOME_USERS=["老闆","行政A","行政B","余青陽","賴彥銘","郭師傅"];
 const HOME_USER_COLORS={"老闆":"#c0392b","行政A":"#2980b9","行政B":"#8e44ad","余青陽":"#16a085","賴彥銘":"#d35400","郭師傅":"#27ae60"};
@@ -102,8 +118,8 @@ function HomeSecretTab(){
 
 function HomePage(){
   const [currentUser,setCurrentUser]=useState("行政A");
-  const [messages,setMessages]=useState(HOME_SEED_MSGS);
-  const [todos,setTodos]=useState(HOME_SEED_TODOS);
+  const [messages,setMessages]=useState([]);
+  const [todos,setTodos]=useState([]);
   const [msgInput,setMsgInput]=useState("");
   const [todoInput,setTodoInput]=useState("");
   const [todoAssignee,setTodoAssignee]=useState("行政A");
@@ -112,14 +128,19 @@ function HomePage(){
   const [filter,setFilter]=useState("全部");
   const msgEndRef=useRef(null);
 
+  useEffect(()=>{
+    sb.getAll("messages").then(rows=>{if(rows&&rows.length)setMessages(rows.map(r=>r.data).sort((a,b)=>new Date(a.time)-new Date(b.time)));else setMessages(HOME_SEED_MSGS);});
+    sb.getAll("todos").then(rows=>{if(rows&&rows.length)setTodos(rows.map(r=>r.data));else setTodos(HOME_SEED_TODOS);});
+  },[]);
+
   useEffect(()=>{if(homeTab==="board")msgEndRef.current?.scrollIntoView({behavior:"smooth"});},[messages,homeTab]);
 
-  function sendMsg(){const text=msgInput.trim();if(!text)return;setMessages(p=>[...p,{id:Date.now(),user:currentUser,text,time:new Date().toISOString(),pinned:false}]);setMsgInput("");}
-  function pinMsg(id){setMessages(p=>p.map(m=>m.id===id?{...m,pinned:!m.pinned}:m));}
-  function deleteMsg(id){setMessages(p=>p.filter(m=>m.id!==id));}
-  function addTodo(){const text=todoInput.trim();if(!text)return;setTodos(p=>[{id:Date.now(),text,done:false,priority:todoPriority,assignee:todoAssignee,time:new Date().toISOString()},...p]);setTodoInput("");}
-  function toggleTodo(id){setTodos(p=>p.map(t=>t.id===id?{...t,done:!t.done}:t));}
-  function deleteTodo(id){setTodos(p=>p.filter(t=>t.id!==id));}
+  function sendMsg(){const text=msgInput.trim();if(!text)return;const m={id:Date.now(),user:currentUser,text,time:new Date().toISOString(),pinned:false};setMessages(p=>[...p,m]);setMsgInput("");sb.upsert("messages",{id:m.id,data:m});}
+  function pinMsg(id){setMessages(p=>p.map(m=>{if(m.id!==id)return m;const u={...m,pinned:!m.pinned};sb.upsert("messages",{id:u.id,data:u});return u;}));}
+  function deleteMsg(id){setMessages(p=>p.filter(m=>m.id!==id));sb.delete("messages",id);}
+  function addTodo(){const text=todoInput.trim();if(!text)return;const t={id:Date.now(),text,done:false,priority:todoPriority,assignee:todoAssignee,time:new Date().toISOString()};setTodos(p=>[t,...p]);setTodoInput("");sb.upsert("todos",{id:t.id,data:t});}
+  function toggleTodo(id){setTodos(p=>p.map(t=>{if(t.id!==id)return t;const u={...t,done:!t.done};sb.upsert("todos",{id:u.id,data:u});return u;}));}
+  function deleteTodo(id){setTodos(p=>p.filter(t=>t.id!==id));sb.delete("todos",id);}
 
   const pinnedMsgs=messages.filter(m=>m.pinned);
   const normalMsgs=messages.filter(m=>!m.pinned);
@@ -1489,7 +1510,7 @@ const SEED_ORDERS=[
 
 // ─── 主頁面切換包裝 ───────────────────────────────────────────────────────────
 export default function App(){
-  const [mainTab, setMainTab] = useState("erp"); // "home" | "erp"
+  const [mainTab, setMainTab] = useState("erp");
   const [orders,setOrders]=useState(SEED_ORDERS);
   const [pendingOrders,setPendingOrders]=useState([]);
   const [showForm,setShowForm]=useState(false);
@@ -1503,6 +1524,30 @@ export default function App(){
   const [tab,setTab]=useState("calendar");
   const [showPendingForm,setShowPendingForm]=useState(false);
   const [editPending,setEditPending]=useState(null);
+  const [loading,setLoading]=useState(true);
+
+  // 從 Supabase 載入訂單
+  useEffect(()=>{
+    sb.getAll("pending_orders").then(rows=>{
+      if(rows&&rows.length)setPendingOrders(rows.map(r=>r.data));
+      setLoading(false);
+    }).catch(()=>setLoading(false));
+  },[]);
+
+  // 訂單操作（自動同步 Supabase）
+  function savePendingOrder(order){
+    const toSave={...order,id:order.id||Date.now(),customer:order.cust||order.customer||"",address:order.addr||order.address||""};
+    setPendingOrders(prev=>prev.find(x=>x.id===toSave.id)?prev.map(x=>x.id===toSave.id?toSave:x):[...prev,toSave]);
+    sb.upsert("pending_orders",{id:toSave.id,data:toSave});
+    return toSave;
+  }
+  function deletePendingOrder(id){
+    setPendingOrders(p=>p.filter(x=>x.id!==id));
+    sb.delete("pending_orders",id);
+  }
+  function updatePendingOrder(id,patch){
+    setPendingOrders(p=>p.map(x=>{if(x.id!==id)return x;const u={...x,...patch};sb.upsert("pending_orders",{id:u.id,data:u});return u;}));
+  }
 
   const filtered=useMemo(()=>orders.filter(o=>filterMaster==="all"||o.masterId===filterMaster),[orders,filterMaster]);
   const dayOrders=useMemo(()=>selectedDate?filtered.filter(o=>o.date===selectedDate):[],[selectedDate,filtered]);
@@ -1553,9 +1598,10 @@ export default function App(){
           </div>
 
           <div style={{padding:"14px 18px",maxWidth:1080,margin:"0 auto"}}>
-            {tab==="quote"&&(<QuotationSystem onCreateOrder={p=>{setPendingOrders(prev=>[...prev,{...p,id:Date.now(),scheduled:false}]);setTab("pending");}}/>)}
-            {tab==="pending"&&(<PendingOrdersTab pendingOrders={pendingOrders} onEdit={p=>{setEditPending(p);setShowPendingForm(true);}} onDelete={id=>setPendingOrders(p=>p.filter(x=>x.id!==id))} onToggleScheduled={id=>setPendingOrders(p=>p.map(x=>x.id===id?{...x,scheduled:!x.scheduled}:x))}/>)}
-            {tab==="delivery"&&(<DeliveryTab pendingOrders={pendingOrders} onMarkShipped={(id,invoiceNo,total)=>setPendingOrders(prev=>prev.map(x=>x.id===id?{...x,shipped:true,shippedAt:new Date().toISOString().slice(0,10),invoiceNo,shippedTotal:total}:x))}/>)}
+            {loading&&<div style={{textAlign:"center",padding:60,color:"#9CA3AF",fontSize:15}}>載入中...</div>}
+            {!loading&&tab==="quote"&&(<QuotationSystem onCreateOrder={p=>{savePendingOrder({...p,id:Date.now(),scheduled:false});setTab("pending");}}/>)}
+            {!loading&&tab==="pending"&&(<PendingOrdersTab pendingOrders={pendingOrders} onEdit={p=>{setEditPending(p);setShowPendingForm(true);}} onDelete={id=>deletePendingOrder(id)} onToggleScheduled={id=>{const o=pendingOrders.find(x=>x.id===id);if(o)updatePendingOrder(id,{scheduled:!o.scheduled});}}/>)}
+            {!loading&&tab==="delivery"&&(<DeliveryTab pendingOrders={pendingOrders} onMarkShipped={(id,invoiceNo,total)=>updatePendingOrder(id,{shipped:true,shippedAt:new Date().toISOString().slice(0,10),invoiceNo,shippedTotal:total})}/>)}
             {tab==="calendar"&&(<>
               <WageSummary orders={orders} year={calYear} month={calMonth} onTransferLog={()=>{}} onMonthlySettle={()=>{}}/>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
@@ -1572,8 +1618,7 @@ export default function App(){
           {(showForm||editOrder)&&(<OrderForm order={editOrder} defaultDate={pendingAddDate||todayStr} pendingOrders={pendingOrders.filter(p=>!p.scheduled)} onSave={o=>{if(editOrder){saveOrder(o);}else{addOrder(o);}}} onClose={()=>{setShowForm(false);setEditOrder(null);setPendingAddDate(null);}} onDelete={deleteOrder}/>)}
           {wageCalcMaster&&<WageCalc master={wageCalcMaster} onClose={()=>setWageCalcMaster(null)}/>}
           {showPendingForm&&(<PendingOrderForm order={editPending?.id?editPending:null} onSave={p=>{
-            const toSave={...p,id:editPending?.id||Date.now(),scheduled:editPending?.scheduled||false};
-            setPendingOrders(prev=>editPending?.id?prev.map(x=>x.id===toSave.id?toSave:x):[...prev,toSave]);
+            savePendingOrder({...p,id:editPending?.id||Date.now(),scheduled:editPending?.scheduled||false});
             setShowPendingForm(false);setEditPending(null);
           }} onClose={()=>{setShowPendingForm(false);setEditPending(null);}}/>)}
         </div>
