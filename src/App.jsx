@@ -278,7 +278,7 @@ function calcFixedPlate({material,color,wMm,hMm}){
 }
 
 const lbl = { display:"block", fontSize:12, fontWeight:600, color:"#374151", marginBottom:5 };
-const inp = { width:"100%", padding:"8px 12px", borderRadius:8, border:"1.5px solid #E5E7EB", fontSize:13, outline:"none", fontFamily:ff, boxSizing:"border-box", color:"#111" };
+const inp = { width:"100%", padding:"8px 12px", borderRadius:8, border:"1.5px solid #E5E7EB", fontSize:13, outline:"none", fontFamily:ff, boxSizing:"border-box", color:"#111", background:"#fff" };
 const sel = { ...inp, cursor:"pointer", background:"#fff" };
 const iBtn = { width:32, height:32, borderRadius:8, border:"1px solid #E5E7EB", background:"#fff", cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" };
 
@@ -1561,7 +1561,7 @@ export default function App(){
 
   // Top-level tab switcher between Home (交班中心) and ERP (排程管理)
   return(
-    <div>
+    <div style={{colorScheme:"light"}}>
       {/* 頂層導覽 */}
       <div style={{background:"#0f1117",borderBottom:"1px solid #1e2740",padding:"0 20px",height:48,display:"flex",alignItems:"center",gap:16,position:"sticky",top:0,zIndex:300}}>
         <span style={{fontSize:18}}>🚿</span>
