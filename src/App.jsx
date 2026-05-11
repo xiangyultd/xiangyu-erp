@@ -335,7 +335,7 @@ const Chip=({children,color,bg})=>(<span style={{padding:"2px 8px",borderRadius:
 function Modal({onClose,children,width=500}){
   return(
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(4px)"}} onClick={onClose}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:18,width,maxWidth:"95vw",maxHeight:"88vh",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 24px 60px rgba(0,0,0,0.22)",fontFamily:ff}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",color:"#111",borderRadius:18,width,maxWidth:"95vw",maxHeight:"88vh",display:"flex",flexDirection:"column",overflow:"hidden",boxShadow:"0 24px 60px rgba(0,0,0,0.22)",fontFamily:ff,colorScheme:"light"}}>
         {children}
       </div>
     </div>
