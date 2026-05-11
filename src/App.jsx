@@ -1562,6 +1562,16 @@ export default function App(){
   // Top-level tab switcher between Home (交班中心) and ERP (排程管理)
   return(
     <div style={{colorScheme:"light"}}>
+      <style>{`
+        input, select, textarea {
+          background-color: #ffffff !important;
+          color: #111111 !important;
+          border-color: #E5E7EB !important;
+        }
+        input::placeholder, textarea::placeholder {
+          color: #9CA3AF !important;
+        }
+      `}</style>
       {/* 頂層導覽 */}
       <div style={{background:"#0f1117",borderBottom:"1px solid #1e2740",padding:"0 20px",height:48,display:"flex",alignItems:"center",gap:16,position:"sticky",top:0,zIndex:300}}>
         <span style={{fontSize:18}}>🚿</span>
