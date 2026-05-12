@@ -745,10 +745,13 @@ function QuotationSystem({onCreateOrder}){
         lines.push(name);
       } else if(item.dt==="固定片"){
         lines.push(`固定片／${item.mat}／${item.col}`);
-        if(r.wR&&r.hR)lines.push(`尺寸：W${r.wR} × H${r.hR}`);
+        lines.push(`尺寸：W${(item.wMm/10)} × H${(item.hMm/10)} cm`);
+      } else if(item.dt==="L型對開"){
+        lines.push(`${item.dt}／${item.mat}／${item.col}`);
+        lines.push(`尺寸：W${(item.wMm/10)} × W${(item.wMm2/10)} × H${(item.hMm/10)} cm`);
       } else {
         lines.push(`${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`);
-        if(r.wR&&r.hR)lines.push(`尺寸：W${r.wR} × H${r.hR}`);
+        lines.push(`尺寸：W${(item.wMm/10)} × H${(item.hMm/10)} cm`);
       }
       lines.push(`費用：$${fmtMoney(itemTotal)}`);
     });
