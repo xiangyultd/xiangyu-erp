@@ -425,7 +425,7 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   let prod=base+extraW+extraH;
   if(fourDoorFull)prod+=500;if(foldLock)prod+=1000;
   if(arcShorten&&doorType==="圓弧型"&&material==="3mmPS501")prod+=500;
-  const thrPrice=hasThreshold&&thresholdMm>0?Math.round(thresholdMm/10)*10*10:0;
+  const thrPrice=hasThreshold&&thresholdMm>0?Math.round(thresholdMm):0;
   const towelPrice=(towelBar||0)*200;
   const feeKey=installType==="含拆舊"?"拆裝":installType==="純寄送"?null:"安裝";
   const installFee=feeKey?INSTALL_MAP[master]?.[region]?.[feeKey]??0:0;
@@ -475,7 +475,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
     if(item.cat==="加購品"){
       const t=item.addonType||"毛巾桿";
       if(t==="毛巾桿"){const total=(item.towel||1)*200;return{productPrice:total,installFee:0,floorFee:0,total};}
-      if(t==="鋁門檻"){const thrPrice=Math.round((item.thrMm||0)/10)*10*10;const inst=item.fpInstallFee||0;return{productPrice:thrPrice,installFee:inst,floorFee:0,total:thrPrice+inst};}
+      if(t==="鋁門檻"){const thrPrice=Math.round(item.thrMm||0);const inst=item.fpInstallFee||0;return{productPrice:thrPrice,installFee:inst,floorFee:0,total:thrPrice+inst};}
       if(t==="自填"){const total=item.addonPrice||0;return{productPrice:total,installFee:0,floorFee:0,total};}
       return{productPrice:0,installFee:0,floorFee:0,total:0};
     }
@@ -715,7 +715,7 @@ function QuotationSystem({onCreateOrder}){
     if(item.cat==="加購品"){
       const t=item.addonType||"毛巾桿";
       if(t==="毛巾桿"){const total=(item.towel||1)*200;return{productPrice:total,installFee:0,floorFee:0,total};}
-      if(t==="鋁門檻"){const thrPrice=Math.round((item.thrMm||0)/10)*10*10;const inst=item.fpInstallFee||0;return{productPrice:thrPrice,installFee:inst,floorFee:0,total:thrPrice+inst};}
+      if(t==="鋁門檻"){const thrPrice=Math.round(item.thrMm||0);const inst=item.fpInstallFee||0;return{productPrice:thrPrice,installFee:inst,floorFee:0,total:thrPrice+inst};}
       if(t==="自填"){const total=item.addonPrice||0;return{productPrice:total,installFee:0,floorFee:0,total};}
       return{productPrice:0,installFee:0,floorFee:0,total:0};
     }
@@ -752,6 +752,7 @@ function QuotationSystem({onCreateOrder}){
       } else {
         lines.push(`${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`);
         lines.push(`尺寸：W${(item.wMm/10)} × H${(item.hMm/10)} cm`);
+        if(item.hasThr&&item.thrMm>0)lines.push(`鋁門檻：${(item.thrMm/10)} cm　$${fmtMoney(Math.round(item.thrMm))}`);
       }
       lines.push(`費用：$${fmtMoney(itemTotal)}`);
     });
@@ -1070,7 +1071,7 @@ function DeliveryModal({order,onClose,onShipped}){
       if(qi.cat==="加購品"){
         const t=qi.addonType||"毛巾桿";
         const name=t==="自填"?(qi.addonName||"加購品"):t;
-        const price=t==="毛巾桿"?(qi.towel||1)*200:t==="鋁門檻"?Math.round((qi.thrMm||0)/10)*10*10:(qi.addonPrice||0);
+        const price=t==="毛巾桿"?(qi.towel||1)*200:t==="鋁門檻"?Math.round(qi.thrMm||0):(qi.addonPrice||0);
         rows.push({id:"addon"+i,name,qty:1,unit:"項",price,note:""});
       } else {
         const name=qi.dt==="固定片"?`固定片 ${qi.mat||""} ${qi.col||""}`.trim():`${qi.dt||""} ${qi.mat||""} ${qi.col||""}`.trim()||order.product||"";
