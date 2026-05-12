@@ -459,7 +459,7 @@ function QInput(props){const {style,...rest}=props;return(<input {...rest} style
 function QToggle({value,onChange,options,wrap}){return(<div style={{display:"flex",flexWrap:wrap?"wrap":"nowrap",gap:5}}>{options.map(o=><button key={o} onClick={()=>onChange(o)} style={{padding:"4px 11px",borderRadius:6,fontSize:12,cursor:"pointer",border:value===o?"2px solid #1a1a1a":"1px solid #ddd",background:value===o?"#1a1a1a":"#fff",color:value===o?"#fff":"#333",fontWeight:value===o?600:400}}>{o}</button>)}</div>);}
 function QCheck({checked,onChange,label}){return(<label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:12}}><input type="checkbox" checked={checked} onChange={e=>onChange(e.target.checked)} style={{width:15,height:15}}/>{label}</label>);}
 function QTag({children,color}){return(<span style={{background:color+"22",color,border:`1px solid ${color}`,borderRadius:4,padding:"2px 7px",fontSize:11,fontWeight:600}}>{children}</span>);}
-function QSection({title,children,accent}){return(<div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}><div style={{background:accent?"#1a1a1a":"#f0efe9",color:accent?"#f5f4f0":"#1a1a1a",padding:"9px 15px",fontWeight:700,fontSize:13,letterSpacing:1}}>{title}</div><div style={{padding:"11px 15px",display:"flex",flexDirection:"column",gap:9}}>{children}</div></div>);}
+function QSection({title,children,accent}){return(<div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}><div style={{background:accent?"#1a1a1a":"#f0efe9",color:accent?"#fff":"#1a1a1a",padding:"9px 15px",fontWeight:700,fontSize:13,letterSpacing:1}}>{title}</div><div style={{padding:"11px 15px",display:"flex",flexDirection:"column",gap:9}}>{children}</div></div>);}
 function QLineItem({label,value}){return(<div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:"#444"}}>{label}</span><span style={{fontWeight:500}}>${fmtMoney(value)}</span></div>);}
 
 function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:""};}
@@ -618,10 +618,10 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
         {!isAddon&&<div style={{fontSize:12,color:"#333",marginBottom:2}}>{item.mat} / {item.col}</div>}
         {dirLine&&<div style={{fontSize:12,color:"#333",marginBottom:2}}>{dirLine}</div>}
         {!isAddon&&!isFixedPlate&&<div style={{fontSize:13,fontWeight:600,marginBottom:2}}>
-          W{(item.wMm/10).toFixed(0)} × H{(item.hMm/10).toFixed(0)}
+          W{item.wMm/10} × H{item.hMm/10} cm
           {wDeduct>0&&<span style={{color:"#dc2626",marginLeft:6}}>→ 下單W{wReal}</span>}
         </div>}
-        {isFixedPlate&&<div style={{fontSize:13,fontWeight:600}}>W{(item.wMm/10).toFixed(0)} × H{(item.hMm/10).toFixed(0)}</div>}
+        {isFixedPlate&&<div style={{fontSize:13,fontWeight:600}}>W{item.wMm/10} × H{item.hMm/10} cm</div>}
         {isFixedPlate&&item.fpAngle&&<div style={{fontSize:12,color:"#555"}}>{item.fpAngle}</div>}
         {isAddon&&item.addonType==="毛巾桿"&&<div style={{fontSize:12}}>× {item.towel||1} 支</div>}
         {isAddon&&item.addonType==="鋁門檻"&&<div style={{fontSize:12}}>{(item.thrMm/10).toFixed(0)} cm</div>}
@@ -817,23 +817,31 @@ function QuotationSystem({onCreateOrder}){
       </div>
       <QSection title="報價結果" accent>
         {grandTotal>0?(<>
-          <div style={{fontSize:12,color:"#888"}}>報價日期：{qDate}　有效期限：{vDate}</div>
+          <div style={{fontSize:13,color:"#555"}}>報價日期：{qDate}　有效期限：{vDate}</div>
           {items.map((item,i)=>{
             const r=results[i];
             if(!r||r.error||r.blocked)return null;
-            if(r.pending)return(<div key={item.id} style={{borderBottom:"1px solid #333",paddingBottom:8,marginBottom:8}}><div style={{fontSize:12,color:"#aaa",marginBottom:4}}>固定片／{item.mat}／{item.col}　{item.fpAngle||"90度"}</div><div style={{fontSize:12,color:"#888",fontStyle:"italic"}}>價格後補</div></div>);
+            if(r.pending)return(<div key={item.id} style={{borderBottom:"1px solid #e5e5e5",paddingBottom:10,marginBottom:10}}><div style={{fontSize:13,color:"#333",marginBottom:4}}>固定片／{item.mat}／{item.col}　{item.fpAngle||"90度"}</div><div style={{fontSize:13,color:"#888",fontStyle:"italic"}}>價格後補</div></div>);
             const itemTotal=item.dt==="固定片"?r.productPrice+(item.adjust||0):r.total+(item.adjust||0);
-            return(<div key={item.id} style={{borderBottom:"1px solid #333",paddingBottom:8,marginBottom:8}}>
-              <div style={{fontSize:12,color:"#aaa",marginBottom:4}}>
-                {item.dt==="固定片"?`固定片／${item.mat}／${item.col}`:`門型 ${i+1}：${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`}
+            return(<div key={item.id} style={{borderBottom:"1px solid #e5e5e5",paddingBottom:10,marginBottom:10}}>
+              <div style={{fontSize:14,color:"#111",fontWeight:700,marginBottom:2}}>
+                {item.dt==="固定片"?`固定片／${item.mat}／${item.col}`:`${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`}
               </div>
-              <QLineItem label="產品費用" value={r.productPrice}/>
-              {r.installFee>0&&<QLineItem label="安裝費" value={r.installFee}/>}
-              {r.floorFee>0&&<QLineItem label={`樓層費（${floor}樓）`} value={r.floorFee}/>}
+              {item.cat!=="加購品"&&<div style={{fontSize:13,color:"#555",marginBottom:6}}>
+                {item.dt==="L型對開"?`W${item.wMm/10} × W${item.wMm2/10} × H${item.hMm/10} cm`:`W${item.wMm/10} × H${item.hMm/10} cm`}
+              </div>}
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>產品費用</span><span style={{fontWeight:600}}>${fmtMoney(r.productPrice)}</span></div>
+              {r.installFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>安裝費</span><span style={{fontWeight:600}}>${fmtMoney(r.installFee)}</span></div>}
+              {r.floorFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>樓層費（{floor}樓）</span><span style={{fontWeight:600}}>${fmtMoney(r.floorFee)}</span></div>}
+              {r.thresholdPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>鋁門檻（{(item.thrMm/10)} cm）</span><span style={{fontWeight:600}}>${fmtMoney(r.thresholdPrice)}</span></div>}
+              {r.thresholdInstallFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>門檻安裝費</span><span style={{fontWeight:600}}>${fmtMoney(r.thresholdInstallFee)}</span></div>}
+              {r.towelPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>毛巾桿×{item.towel}</span><span style={{fontWeight:600}}>${fmtMoney(r.towelPrice)}</span></div>}
+              {(item.adjust||0)!==0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#d97706",marginBottom:3}}><span>調整</span><span style={{fontWeight:600}}>{(item.adjust||0)>0?"+":""}{fmtMoney(item.adjust||0)}</span></div>}
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:15,color:"#111",fontWeight:700,marginTop:6,paddingTop:6,borderTop:"1px solid #ddd"}}><span>小計</span><span>${fmtMoney(itemTotal)}</span></div>
             </div>);
           })}
-          {shippingFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#6366f1",fontWeight:600}}><span>🚚 進南貨運運費{jinnExtra>0?`（含偏遠加價 $${fmtMoney(jinnExtra)}）`:""}</span><span>${fmtMoney(shippingFee)}</span></div>}
-          <div style={{paddingTop:8,borderTop:"2px solid #f5f4f0",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:16}}>總計</span><span style={{fontWeight:700,fontSize:22}}>${fmtMoney(grandTotal)}</span></div>
+          {shippingFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#4f46e5",fontWeight:600,marginBottom:8}}><span>🚚 進南貨運運費{jinnExtra>0?`（含偏遠 $${fmtMoney(jinnExtra)}）`:""}</span><span>${fmtMoney(shippingFee)}</span></div>}
+          <div style={{paddingTop:10,borderTop:"2px solid #1a1a1a",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:18,color:"#111"}}>總計</span><span style={{fontWeight:800,fontSize:26,color:"#111"}}>${fmtMoney(grandTotal)}</span></div>
           <div style={{display:"flex",gap:8,marginTop:4}}>
             <button onClick={handleCopy} style={{flex:1,padding:"11px",borderRadius:8,background:copied?"#059669":"#1a1a1a",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:qff}}>{copied?"✅ 已複製！":"📋 複製報價單"}</button>
             <button onClick={handleConvert} style={{flex:1,padding:"11px",borderRadius:8,background:converted?"#059669":"#3B82F6",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:qff}}>{converted?"✅ 已加入！":"📋 轉為待安裝訂單"}</button>
@@ -1041,11 +1049,23 @@ function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete})
             <div><label style={lbl}>工作類型</label><select value={form.jobType} onChange={e=>set("jobType",e.target.value)} style={sel}>{["安裝","拆裝","純配送"].map(t=><option key={t}>{t}</option>)}</select></div>
           </div>
           <div><label style={lbl}>樓層：{form.floor}F {form.floor>=4?`（樓層費 +$${(form.floor-3)*300}）`:""}</label><input type="range" min={1} max={10} value={form.floor} onChange={e=>set("floor",Number(e.target.value))} style={{width:"100%",accentColor:master.color}}/></div>
+          <div>
+            <label style={lbl}>金額微調</label>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <button onClick={()=>set("priceAdjust",(form.priceAdjust||0)-100)} style={{width:36,height:36,borderRadius:8,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",fontSize:18,fontWeight:700,color:"#374151"}}>−</button>
+              <span style={{minWidth:80,textAlign:"center",fontSize:14,fontWeight:600,color:(form.priceAdjust||0)>0?"#059669":(form.priceAdjust||0)<0?"#DC2626":"#888"}}>
+                {(form.priceAdjust||0)>0?"+"+(form.priceAdjust||0).toLocaleString():(form.priceAdjust||0)<0?"-"+Math.abs(form.priceAdjust||0).toLocaleString():"$0"}
+              </span>
+              <button onClick={()=>set("priceAdjust",(form.priceAdjust||0)+100)} style={{width:36,height:36,borderRadius:8,border:"1px solid #E5E7EB",background:"#fff",cursor:"pointer",fontSize:18,fontWeight:700,color:"#374151"}}>＋</button>
+              {(form.priceAdjust||0)!==0&&<button onClick={()=>set("priceAdjust",0)} style={{fontSize:11,color:"#9CA3AF",background:"none",border:"none",cursor:"pointer"}}>重置</button>}
+            </div>
+          </div>
           <div><label style={lbl}>備註</label><textarea value={form.note} onChange={e=>set("note",e.target.value)} style={{...inp,height:54,resize:"vertical"}}/></div>
         </div>
         {wage&&(<div style={{marginTop:12,padding:14,borderRadius:12,background:master.light,border:"1.5px solid "+master.color+"40"}}>
           <div style={{fontSize:11,fontWeight:700,color:master.dark,marginBottom:8}}>師傅工資預覽</div>
-          <div style={{display:"flex",justifyContent:"space-between",fontWeight:800,color:master.dark,fontSize:18}}><span>合計</span><span>{fmt(wage.total)}</span></div>
+          <div style={{display:"flex",justifyContent:"space-between",fontWeight:800,color:master.dark,fontSize:18}}><span>合計</span><span>{fmt(wage.total+(form.priceAdjust||0))}</span></div>
+          {(form.priceAdjust||0)!==0&&<div style={{fontSize:12,color:master.dark,opacity:0.7}}>基本 {fmt(wage.total)} {(form.priceAdjust||0)>0?"+":""}{(form.priceAdjust||0).toLocaleString()} 調整</div>}
         </div>)}
       </div>
       <div style={{padding:"12px 20px",borderTop:"1px solid #F3F4F6",display:"flex",gap:10}}>
