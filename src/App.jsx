@@ -543,9 +543,9 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           </QRow>
           <QRow label="顏色"><QToggle value={item.col} onChange={v=>s("col",v)} options={cols}/></QRow>
           {(()=>{
-            const dirOpts=item.dt==="一字二門"||item.dt==="一字三門"||item.dt==="一字四門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="固定片"?["左固","右固"]:null;
+            const dirOpts=item.dt==="一字四門"?["雙固","左固","右固","四片活動"]:item.dt==="一字二門"||item.dt==="一字三門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="固定片"?["左固","右固"]:null;
             if(!dirOpts)return null;
-            return <QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>s("direction",v)} options={dirOpts}/></QRow>;
+            return <QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts}/></QRow>;
           })()}
         </>}
         <QRow label="尺寸（mm）">
@@ -1013,10 +1013,20 @@ function WageCalc({master,onClose}){
 
 function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete}){
   const isEdit=!!order;
-  const [form,setForm]=useState(order||{customer:"",phone:"",address:"",masterId:"qingyang",area:Object.keys(MASTERS.qingyang.areas)[0],jobType:"安裝",floor:1,hasThreshold:false,hasThresholdReplace:false,isLType:false,hasFixedPlate:false,extras:[],extraCustom:0,date:defaultDate||todayStr,timeSlot:"上午",appointTime:"",status:"待確認",product:"",note:"",wagePayStatus:"待付",transferDate:null,monthlySettled:false,collectedAmount:0,collectOnSite:false,collectStatus:"待收",hasShipping:false,shipDate:"",carrier:"",trackingNo:"",shipStatus:"待寄出",hasElevator:null,mapUrl:""});
+  const [form,setForm]=useState(order||{customer:"",phone:"",address:"",masterId:"qingyang",area:Object.keys(MASTERS.qingyang.areas)[0],jobType:"安裝",floor:1,hasThreshold:false,hasThresholdReplace:false,isLType:false,hasFixedPlate:false,extras:[],extraCustom:0,date:defaultDate||todayStr,timeSlot:"上午",appointTime:"",status:"待確認",product:"",note:"",wagePayStatus:"待付",transferDate:null,monthlySettled:false,collectedAmount:0,collectOnSite:false,collectStatus:"待收",hasShipping:false,shipDate:"",carrier:"",trackingNo:"",shipStatus:"待寄出",hasElevator:null,mapUrl:"",priceAdjust:0});
+  const [orderSearch,setOrderSearch]=useState("");
+  const [showOrderSearch,setShowOrderSearch]=useState(!isEdit);
   const master=MASTERS[form.masterId],areas=Object.keys(master.areas);
   const wage=calcWage(master,form.area||areas[0],form.jobType,form.floor,form.hasThreshold,form.isLType,form.hasFixedPlate,form.hasThresholdReplace,form.extras,form.extraCustom,form.hasElevator);
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const matchedOrders=orderSearch.trim()?pendingOrders.filter(p=>{const n=(p.cust||p.customer||"").includes(orderSearch);const a=(p.addr||p.address||"").includes(orderSearch);const pr=(p.product||"").includes(orderSearch);return n||a||pr;}).slice(0,5):[];
+  function applyOrder(p){
+    const addr=p.addr||p.address||"";
+    const det=detectArea(addr,"qingyang")||detectArea(addr,"laiyanming")||detectArea(addr,"guo");
+    const masterId=addr.includes("台中")||addr.includes("彰化")||addr.includes("南投")?"laiyanming":addr.includes("台南")||addr.includes("高雄")||addr.includes("屏東")?"guo":"qingyang";
+    setForm(f=>({...f,customer:p.cust||p.customer||"",phone:p.phone||"",address:addr,product:p.product||"",masterId,area:det||Object.keys(MASTERS[masterId].areas)[0]}));
+    setShowOrderSearch(false);setOrderSearch("");
+  }
   return(
     <Modal onClose={onClose}>
       <div style={{padding:"16px 20px 12px",borderBottom:"1px solid #F3F4F6",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -1028,6 +1038,15 @@ function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete})
       </div>
       <div style={{flex:1,overflowY:"auto",padding:"14px 20px"}}>
         <div style={{display:"grid",gap:12}}>
+          {!isEdit&&(<div style={{marginBottom:4}}>
+            <label style={lbl}>從訂單帶入</label>
+            <select onChange={e=>{const p=pendingOrders.find(x=>String(x.id)===e.target.value);if(p)applyOrder(p);}} style={sel} defaultValue="">
+              <option value="">— 選擇訂單 —</option>
+              {pendingOrders.map(p=>(
+                <option key={p.id} value={p.id}>{p.cust||p.customer||"（未填）"}{p.product?" ／ "+p.product:""}</option>
+              ))}
+            </select>
+          </div>)}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div><label style={lbl}>客戶姓名</label><input value={form.customer} onChange={e=>set("customer",e.target.value)} style={inp} placeholder="王大明"/></div>
             <div><label style={lbl}>聯絡電話</label><input value={form.phone||""} onChange={e=>set("phone",e.target.value)} style={inp} placeholder="0912-345-678"/></div>
@@ -1585,7 +1604,16 @@ export default function App(){
 
   const filtered=useMemo(()=>orders.filter(o=>filterMaster==="all"||o.masterId===filterMaster),[orders,filterMaster]);
   const dayOrders=useMemo(()=>selectedDate?filtered.filter(o=>o.date===selectedDate):[],[selectedDate,filtered]);
-  const addOrder=o=>{setOrders(p=>[...p,o]);setShowForm(false);setPendingAddDate(null);};
+  const addOrder=o=>{
+    setOrders(p=>[...p,o]);
+    setShowForm(false);
+    setPendingAddDate(null);
+    // 自動建立出貨單訂單（如果還沒有）
+    const exists=pendingOrders.find(p=>(p.cust||p.customer||"")===(o.customer||"")&&(p.addr||p.address||"")===(o.address||""));
+    if(!exists&&o.customer){
+      savePendingOrder({id:Date.now(),cust:o.customer,phone:o.phone||"",addr:o.address||"",master:MASTERS[o.masterId]?.name||"余青陽",region:o.area||"",product:o.product||"",shipMethod:o.jobType==="純配送"?"寄進南":"安裝",wDeduct:0,ordered:false,scheduled:true,quoteItems:[]});
+    }
+  };
   const saveOrder=o=>{setOrders(p=>p.map(x=>x.id===o.id?o:x));setEditOrder(null);};
   const deleteOrder=id=>{setOrders(p=>p.filter(o=>o.id!==id));setEditOrder(null);};
   const updateOrder=(id,patch)=>setOrders(p=>p.map(o=>o.id===id?{...o,...patch}:o));
