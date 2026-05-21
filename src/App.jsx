@@ -565,8 +565,6 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
         </QRow>
         {!isFixedPlate&&<QRow label="安裝類型"><QToggle value={item.instType||"純安裝"} onChange={v=>s("instType",v)} options={["純安裝","含拆舊","純寄送"]}/></QRow>}
         {isFixedPlate&&<QRow label="角度"><QToggle value={item.fpAngle||"90度"} onChange={v=>s("fpAngle",v)} options={["45度","90度","180度"]}/></QRow>}
-        <QRow label="W扣尺寸"><QToggle value={String(item.wDeductItem||0)} onChange={v=>s("wDeductItem",Number(v))} options={["0","0.5","1","1.5","2"]}/><span style={{fontSize:11,color:"#888"}}>cm</span></QRow>
-        <QRow label="H扣尺寸"><QCheck checked={!!item.hDeduct} onChange={v=>s("hDeduct",v?0.5:0)} label="需要"/>{!!item.hDeduct&&<><QInput type="number" value={item.hDeduct} onChange={e=>s("hDeduct",Number(e.target.value))} min={0} max={10} step={0.5} style={{width:70}}/><span style={{fontSize:11,color:"#888"}}>cm</span></>}</QRow>
         <QRow label="微調金額">
           <button onClick={()=>s("adjust",(item.adjust||0)-100)} style={{width:28,height:28,borderRadius:6,border:"1px solid #ddd",background:"#fff",cursor:"pointer",fontSize:16,fontWeight:700}}>−</button>
           <span style={{minWidth:70,textAlign:"center",fontSize:13,fontWeight:600,color:(item.adjust||0)>0?"#059669":(item.adjust||0)<0?"#DC2626":"#888"}}>{(item.adjust||0)>0?`+$${fmtMoney(item.adjust||0)}`:(item.adjust||0)<0?`-$${fmtMoney(Math.abs(item.adjust||0))}`:"$0"}</span>
@@ -592,7 +590,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
   );
 }
 
-function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct,isShipping,clientName,onClose}){
+function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct,isShipping,clientName,shipDate,onClose}){
   const ref=useRef(null);
   const today=new Date();
   const dateStr=`${today.getFullYear()-1911}/${String(today.getMonth()+1).padStart(2,"0")}/${String(today.getDate()).padStart(2,"0")}`;
@@ -679,7 +677,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
             </div>
           ))}
 
-          {shipText&&<div style={{textAlign:"right",marginTop:28,fontSize:14}}>{shipText}</div>}
+          {(shipText||shipDate)&&<div style={{textAlign:"right",marginTop:28,fontSize:14}}>{shipDate?`${shipDate} `:""}  {shipText}</div>}
         </div>
       </div>
     </Modal>
@@ -873,7 +871,6 @@ function QuotationSystem({onCreateOrder}){
           <QRow label="偏遠加價"><QInput type="number" value={jinnExtra} onChange={e=>setJinnExtra(Number(e.target.value))} placeholder="0" style={{width:100}}/><span style={{fontSize:11,color:"#888"}}>元（宜花東等）</span></QRow>
         </>}
         {custName&&<QRow label="客單名稱"><span style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>{genClientName(master,custName,region,addr)}</span></QRow>}
-        <QRow label="W扣尺寸"><QToggle value={String(wDeduct)} onChange={v=>setWDeduct(Number(v))} options={["0","0.5","1","1.5","2"]}/><span style={{fontSize:11,color:"#888"}}>cm</span></QRow>
       </QSection>
       <div>
         <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"#374151"}}>門型明細</div>
@@ -1687,9 +1684,10 @@ function PendingOrderForm({order,onSave,onClose}){
           </div>
           <div><label style={lbl}>施工地址</label><input value={form.addr||""} onChange={e=>set("addr",e.target.value)} style={{...inp}} placeholder="台北市信義區..."/></div>
           <div><label style={lbl}>品項描述</label><input value={form.product||""} onChange={e=>set("product",e.target.value)} style={inp} placeholder="一字三門（白）5mmPS101 W150×H190"/></div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             <div><label style={lbl}>師傅</label><select value={form.master||"余青陽"} onChange={e=>{const m=e.target.value;set("master",m);const autoShip=m==="余青陽"?"寄松成":m==="賴彥銘"?"載":m==="郭師傅"?(form.region==="台南"?"寄台南站址":"寄高雄站址"):m==="進南貨運"?"寄進南":m==="自取"?"自取":"寄松成";set("shipMethod",autoShip);}} style={sel}>{["余青陽","賴彥銘","郭師傅","進南貨運","自取"].map(m=><option key={m}>{m}</option>)}</select></div>
             <div><label style={lbl}>W扣尺寸</label><select value={form.wDeduct||0} onChange={e=>set("wDeduct",Number(e.target.value))} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
+            <div><label style={lbl}>H扣尺寸</label><select value={form.hDeduct||0} onChange={e=>set("hDeduct",Number(e.target.value))} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
           </div>
           {clientName&&<div style={{padding:"8px 12px",background:"#F8FAFC",borderRadius:8,fontSize:13}}><span style={{color:"#6B7280"}}>客單名稱：</span><span style={{fontWeight:700}}>{clientName}</span></div>}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -1733,7 +1731,7 @@ function PendingOrderForm({order,onSave,onClose}){
         <button onClick={onClose} style={{flex:1,padding:11,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",fontFamily:ff,fontWeight:600}}>取消</button>
         <button onClick={()=>onSave({...form,id:order?.id||Date.now(),scheduled:order?.scheduled||false,customer:form.cust||"",address:form.addr||""})} style={{flex:2,padding:11,borderRadius:10,border:"none",background:"#1E293B",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:ff}}>{isEdit?"儲存修改":"新增訂單"}</button>
       </div>
-      {showWO&&(()=>{const today=new Date();const dateStr=`${today.getFullYear()-1911}.${today.getMonth()+1}.${today.getDate()}`;return<WorkOrderModal items={form.quoteItems.map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框"}))} results={form.quoteItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={clientName} onClose={()=>setShowWO(false)}/>;})()}
+      {showWO&&(()=>{const today=new Date();const dateStr=`${today.getFullYear()-1911}.${today.getMonth()+1}.${today.getDate()}`;return<WorkOrderModal items={form.quoteItems.map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:form.wDeduct||0,hDeduct:form.hDeduct||0}))} results={form.quoteItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={clientName} shipDate={form.shipDate||""} onClose={()=>setShowWO(false)}/>;})()}
     </Modal>
   );
 }
