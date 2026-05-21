@@ -491,7 +491,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
       const towelPrice=(item.towel||0)*200;
       return{productPrice:price,installFee,towelPrice,thresholdPrice:0,floorFee:0,thresholdInstallFee:0,fixFee:0,fixplateFee:0,total:price+installFee+towelPrice,wR:roundTo100(item.wMm),hR:roundTo100(item.hMm)};
     }
-    if(item.cat==="有框")return calcFramed({doorType:item.dt,material:item.mat,color:item.col,wMm:item.wMm,hMm:item.hMm,wMm2:item.wMm2,hasThreshold:item.hasThr,thresholdMm:item.thrMm,towelBar:item.towel,fourDoorFull:item.fourFull,foldLock:item.foldLock,arcShorten:item.arcShort,floor,hasElevator:elev,installType:item.instType,fixplateFee:fpFee,region,master});
+    if(item.cat==="有框")return calcFramed({doorType:item.dt,material:item.mat,color:item.col,wMm:item.wMm,hMm:item.hMm,wMm2:item.wMm2,hasThreshold:item.hasThr,thresholdMm:item.thrMm,towelBar:item.towelType==="內外把手"?2:item.towelType&&item.towelType!=="無"?1:0,fourDoorFull:item.fourFull,foldLock:item.foldLock,arcShorten:item.arcShort,floor,hasElevator:elev,installType:item.instType,fixplateFee:fpFee,region,master});
     return calcFrameless({doorType:item.dt,wMm:item.wMm,hMm:item.hMm,film:item.film,filmType:item.filmType,blackFrame:item.blackF,flatTube:item.flatT,floor,hasElevator:elev,fixplateFee:fpFee});
   },[item,floor,elev,fpFee,region,master,isFixedPlate]);
   const adjustedTotal=result&&!result.error&&!result.blocked?(result.total+(item.adjust||0)):null;
@@ -620,7 +620,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
     return"";
   }
 
-  const shipText=master==="余青陽"?"寄松成":master==="賴彥銘"?"自載":master==="郭師傅"?(region==="台南"?"寄台南站":"寄高雄站"):master==="進南貨運"?"寄進南":"";
+  const shipText=master==="余青陽"?"寄松成":master==="賴彥銘"?"載":master==="郭師傅"?(region==="台南"?"寄台南站":"寄高雄站"):master==="進南貨運"?"寄進南":"";
 
   return(
     <Modal onClose={onClose} width={560}>
@@ -773,7 +773,7 @@ function QuotationSystem({onCreateOrder}){
       if(!price)return{error:"超出固定片尺寸範圍，請洽詢"};
       return{productPrice:price,installFee:item.fpInstallFee||0,floorFee:0,total:price+(item.fpInstallFee||0)+(item.towel||0)*200,wR:roundTo100(item.wMm),hR:roundTo100(item.hMm)};
     }
-    if(item.cat==="有框")return calcFramed({doorType:item.dt,material:item.mat,color:item.col,wMm:item.wMm,hMm:item.hMm,wMm2:item.wMm2,hasThreshold:item.hasThr,thresholdMm:item.thrMm,towelBar:item.towel,fourDoorFull:item.fourFull,foldLock:item.foldLock,arcShorten:item.arcShort,floor,hasElevator:elev,installType:item.instType||"純安裝",fixplateFee:fpFee,region,master});
+    if(item.cat==="有框")return calcFramed({doorType:item.dt,material:item.mat,color:item.col,wMm:item.wMm,hMm:item.hMm,wMm2:item.wMm2,hasThreshold:item.hasThr,thresholdMm:item.thrMm,towelBar:item.towelType==="內外把手"?2:item.towelType&&item.towelType!=="無"?1:0,fourDoorFull:item.fourFull,foldLock:item.foldLock,arcShorten:item.arcShort,floor,hasElevator:elev,installType:item.instType||"純安裝",fixplateFee:fpFee,region,master});
     return calcFrameless({doorType:item.dt,wMm:item.wMm,hMm:item.hMm,film:item.film,filmType:item.filmType,blackFrame:item.blackF,flatTube:item.flatT,floor,hasElevator:elev,fixplateFee:fpFee});
   });
   const shippingFee=master==="進南貨運"?500+jinnExtra:0;
@@ -805,7 +805,7 @@ function QuotationSystem({onCreateOrder}){
         if(r.floorFee>0)lines.push(`樓層費（${floor}樓）：$${fmtMoney(r.floorFee)}`);
         if(r.thresholdPrice>0)lines.push(`鋁門檻（${item.thrMm/10} cm）：$${fmtMoney(r.thresholdPrice)}`);
         if(r.thresholdInstallFee>0)lines.push(`門檻安裝費：$${fmtMoney(r.thresholdInstallFee)}`);
-        if(r.towelPrice>0)lines.push(`毛巾桿×${item.towel}：$${fmtMoney(r.towelPrice)}`);
+        if(r.towelPrice>0)lines.push(`毛巾桿：$${fmtMoney(r.towelPrice)}`);
       } else {
         lines.push(`${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`);
         lines.push(`尺寸：W${item.wMm/10} × H${item.hMm/10} cm`);
@@ -814,7 +814,7 @@ function QuotationSystem({onCreateOrder}){
         if(r.floorFee>0)lines.push(`樓層費（${floor}樓）：$${fmtMoney(r.floorFee)}`);
         if(r.thresholdPrice>0)lines.push(`鋁門檻（${item.thrMm/10} cm）：$${fmtMoney(r.thresholdPrice)}`);
         if(r.thresholdInstallFee>0)lines.push(`門檻安裝費：$${fmtMoney(r.thresholdInstallFee)}`);
-        if(r.towelPrice>0)lines.push(`毛巾桿×${item.towel}：$${fmtMoney(r.towelPrice)}`);
+        if(r.towelPrice>0)lines.push(`毛巾桿：$${fmtMoney(r.towelPrice)}`);
       }
       lines.push(`小計：$${fmtMoney(itemTotal)}`);
     });
@@ -898,7 +898,7 @@ function QuotationSystem({onCreateOrder}){
               {r.floorFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>樓層費（{floor}樓）</span><span style={{fontWeight:600}}>${fmtMoney(r.floorFee)}</span></div>}
               {r.thresholdPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>鋁門檻（{(item.thrMm/10)} cm）</span><span style={{fontWeight:600}}>${fmtMoney(r.thresholdPrice)}</span></div>}
               {r.thresholdInstallFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>門檻安裝費</span><span style={{fontWeight:600}}>${fmtMoney(r.thresholdInstallFee)}</span></div>}
-              {r.towelPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>毛巾桿×{item.towel}</span><span style={{fontWeight:600}}>${fmtMoney(r.towelPrice)}</span></div>}
+              {r.towelPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>毛巾桿</span><span style={{fontWeight:600}}>${fmtMoney(r.towelPrice)}</span></div>}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:15,color:"#111",fontWeight:700,marginTop:6,paddingTop:6,borderTop:"1px solid #ddd"}}><span>小計</span><span>${fmtMoney(r.total+(item.cat==="加購品"?0:item.adjust||0))}</span></div>
             </div>);
           })}
@@ -1550,6 +1550,7 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
   const [filter,setFilter]=useState("pending");const [search,setSearch]=useState("");
   const [timeFilter,setTimeFilter]=useState("all");
   const [deliveryOrder,setDeliveryOrder]=useState(null);
+  const [workOrderItem,setWorkOrderItem]=useState(null);
 
   function getTimeRange(tf){
     const now=new Date();
@@ -1562,8 +1563,8 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
 
   const visible=pendingOrders.filter(p=>{
     if(filter==="pending"&&(p.scheduled||p.ordered||p.shipped||p.completed))return false;
-    if(filter==="scheduled"&&(!p.scheduled||p.ordered||p.shipped||p.completed))return false;
-    if(filter==="ordered"&&(!p.ordered||p.shipped||p.completed))return false;
+    if(filter==="ordered"&&(!p.ordered||p.scheduled||p.shipped||p.completed))return false;
+    if(filter==="scheduled"&&(!p.scheduled||p.shipped||p.completed))return false;
     if(filter==="shipped"&&(!p.shipped||p.completed))return false;
     if(filter==="completed"&&!p.completed)return false;
     if(search&&!p.customer?.includes(search)&&!(p.cust||"").includes(search)&&!p.address?.includes(search)&&!p.product?.includes(search))return false;
@@ -1575,7 +1576,7 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
   return(
     <div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr 1fr 1fr",gap:8,marginBottom:14}}>
-        {[{label:"待排程",count:pendingOrders.filter(p=>!p.scheduled&&!p.ordered&&!p.shipped&&!p.completed).length,color:"#D97706",bg:"#FEF3C7",f:"pending"},{label:"已排程",count:pendingOrders.filter(p=>p.scheduled&&!p.ordered&&!p.shipped&&!p.completed).length,color:"#059669",bg:"#D1FAE5",f:"scheduled"},{label:"已下單",count:pendingOrders.filter(p=>p.ordered&&!p.shipped&&!p.completed).length,color:"#7c3aed",bg:"#F3E8FF",f:"ordered"},{label:"已出貨",count:pendingOrders.filter(p=>p.shipped&&!p.completed).length,color:"#0ea5e9",bg:"#e0f2fe",f:"shipped"},{label:"已完成",count:pendingOrders.filter(p=>p.completed).length,color:"#059669",bg:"#D1FAE5",f:"completed"},{label:"全部",count:pendingOrders.length,color:"#3B82F6",bg:"#DBEAFE",f:"all"}].map(({label,count,color,bg,f})=>(
+        {[{label:"待處理",count:pendingOrders.filter(p=>!p.scheduled&&!p.ordered&&!p.shipped&&!p.completed).length,color:"#D97706",bg:"#FEF3C7",f:"pending"},{label:"已下單",count:pendingOrders.filter(p=>p.ordered&&!p.scheduled&&!p.shipped&&!p.completed).length,color:"#7c3aed",bg:"#F3E8FF",f:"ordered"},{label:"已排程",count:pendingOrders.filter(p=>p.scheduled&&!p.shipped&&!p.completed).length,color:"#059669",bg:"#D1FAE5",f:"scheduled"},{label:"已出貨",count:pendingOrders.filter(p=>p.shipped&&!p.completed).length,color:"#0ea5e9",bg:"#e0f2fe",f:"shipped"},{label:"已完成",count:pendingOrders.filter(p=>p.completed).length,color:"#059669",bg:"#D1FAE5",f:"completed"},{label:"全部",count:pendingOrders.length,color:"#3B82F6",bg:"#DBEAFE",f:"all"}].map(({label,count,color,bg,f})=>(
           <div key={f} onClick={()=>setFilter(f)} style={{padding:"12px 16px",borderRadius:12,background:filter===f?bg:"#fff",border:"1.5px solid "+(filter===f?color:"#E2E8F0"),cursor:"pointer"}}>
             <div style={{fontSize:11,color:"#6B7280"}}>{label}</div><div style={{fontSize:22,fontWeight:800,color}}>{count}</div>
           </div>
@@ -1590,12 +1591,12 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
       {visible.length===0?(<div style={{textAlign:"center",padding:60,color:"#9CA3AF"}}><div style={{fontSize:36,marginBottom:10}}>📭</div><div style={{fontSize:14}}>目前沒有符合的訂單</div></div>):(
         <div style={{display:"grid",gap:8}}>
           {[...visible].sort((a,b)=>(b.orderDate||"").localeCompare(a.orderDate||"")).map(p=>{
-            const statusColor=p.completed?"#059669":p.shipped?"#0ea5e9":p.ordered?"#7c3aed":p.scheduled?"#22c55e":"#f59e0b";
-            const statusLabel=p.completed?"已完成":p.shipped?"已出貨":p.ordered?"已下單":p.scheduled?"已排程":"未排程";
-            const statusBg=p.completed?"#D1FAE5":p.shipped?"#e0f2fe":p.ordered?"#F3E8FF":p.scheduled?"#dcfce7":"#FEF3C7";
-            const statusTextColor=p.completed?"#065F46":p.shipped?"#0369a1":p.ordered?"#6d28d9":p.scheduled?"#15803d":"#92400E";
+            const statusColor=p.completed?"#059669":p.shipped?"#0ea5e9":p.scheduled?"#22c55e":p.ordered?"#7c3aed":"#f59e0b";
+            const statusLabel=p.completed?"已完成":p.shipped?"已出貨":p.scheduled?"已排程":p.ordered?"已下單":"待處理";
+            const statusBg=p.completed?"#D1FAE5":p.shipped?"#e0f2fe":p.scheduled?"#dcfce7":p.ordered?"#F3E8FF":"#FEF3C7";
+            const statusTextColor=p.completed?"#065F46":p.shipped?"#0369a1":p.scheduled?"#15803d":p.ordered?"#6d28d9":"#92400E";
             return(
-            <div key={p.id} style={{background:"#fff",borderRadius:12,overflow:"hidden",border:"1px solid #E2E8F0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",display:"flex"}}>
+            <div key={p.id} style={{background:"#fff",borderRadius:12,overflow:"hidden",border:"1px solid #E2E8F0",boxShadow:"0 1px 4px rgba(0,0,0,0.04)",display:"flex",textAlign:"left"}}>
               <div style={{width:5,background:statusColor,flexShrink:0,borderRadius:"12px 0 0 12px"}}/>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{padding:"11px 14px 8px",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
@@ -1618,6 +1619,7 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
                 <div style={{padding:"6px 14px 10px",borderTop:"1px solid #F1F5F9",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div style={{display:"flex",gap:6}}>
                     <button onClick={()=>onToggleOrdered(p.id)} style={{padding:"5px 12px",borderRadius:8,border:`1.5px solid ${p.ordered?"#a78bfa":"#E5E7EB"}`,background:p.ordered?"#F3E8FF":"#fff",color:p.ordered?"#7c3aed":"#6B7280",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:ff}}>{p.ordered?"✅ 已下單":"標記已下單"}</button>
+                    {p.quoteItems&&p.quoteItems.length>0&&<button onClick={()=>setWorkOrderItem(p)} style={{padding:"5px 12px",borderRadius:8,border:"1.5px solid #7c3aed",background:"#F3E8FF",color:"#7c3aed",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:ff}}>🖨️ 工單</button>}
                     <button onClick={e=>{e.stopPropagation();setDeliveryOrder(p);}} style={{padding:"5px 12px",borderRadius:8,border:"1.5px solid #0ea5e9",background:"#e0f2fe",color:"#0369a1",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:ff}}>📄 出貨單</button>
                   </div>
                   <div style={{display:"flex",gap:5}}>
@@ -1632,6 +1634,11 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
         </div>
       )}
       {deliveryOrder&&<DeliveryModal order={deliveryOrder} onClose={()=>setDeliveryOrder(null)}/>}
+      {workOrderItem&&(()=>{
+        const clientName=genClientName(workOrderItem.master||"余青陽",workOrderItem.cust||workOrderItem.customer||"",workOrderItem.region||"",workOrderItem.addr||workOrderItem.address||"");
+        const isShip=workOrderItem.master==="進南貨運";
+        return<WorkOrderModal items={(workOrderItem.quoteItems||[]).map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:workOrderItem.wDeduct||0,hDeduct:workOrderItem.hDeduct||0}))} results={(workOrderItem.quoteItems||[]).map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={workOrderItem.cust||workOrderItem.customer||""} phone={workOrderItem.phone||""} addr={workOrderItem.addr||workOrderItem.address||""} master={workOrderItem.master||"余青陽"} region={workOrderItem.region||""} wDeduct={workOrderItem.wDeduct||0} isShipping={isShip} clientName={clientName} shipDate={workOrderItem.shipDate||""} onClose={()=>setWorkOrderItem(null)}/>;
+      })()}
     </div>
   );
 }
@@ -1689,7 +1696,7 @@ function PendingOrderForm({order,onSave,onClose}){
             <div><label style={lbl}>W扣尺寸</label><select value={form.wDeduct||0} onChange={e=>set("wDeduct",Number(e.target.value))} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
             <div><label style={lbl}>H扣尺寸</label><select value={form.hDeduct||0} onChange={e=>set("hDeduct",Number(e.target.value))} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
           </div>
-          {clientName&&<div style={{padding:"8px 12px",background:"#F8FAFC",borderRadius:8,fontSize:13}}><span style={{color:"#6B7280"}}>客單名稱：</span><span style={{fontWeight:700}}>{clientName}</span></div>}
+          <div><label style={lbl}>客單名稱</label><input value={form.clientName!==undefined?form.clientName:clientName} onChange={e=>set("clientName",e.target.value)} style={inp} placeholder={clientName}/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div><label style={lbl}>預計出貨日</label><input value={form.shipDate||""} onChange={e=>set("shipDate",e.target.value)} style={inp} placeholder="5/6"/></div>
             <div><label style={lbl}>出貨方式</label><select value={form.shipMethod||"寄松成"} onChange={e=>set("shipMethod",e.target.value)} style={sel}>{["寄松成","寄進南","寄台南站址","寄高雄站址","載","自取","代安裝","其他"].map(o=><option key={o}>{o}</option>)}</select></div>
@@ -1731,7 +1738,7 @@ function PendingOrderForm({order,onSave,onClose}){
         <button onClick={onClose} style={{flex:1,padding:11,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",fontFamily:ff,fontWeight:600}}>取消</button>
         <button onClick={()=>onSave({...form,id:order?.id||Date.now(),scheduled:order?.scheduled||false,customer:form.cust||"",address:form.addr||""})} style={{flex:2,padding:11,borderRadius:10,border:"none",background:"#1E293B",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:ff}}>{isEdit?"儲存修改":"新增訂單"}</button>
       </div>
-      {showWO&&(()=>{const today=new Date();const dateStr=`${today.getFullYear()-1911}.${today.getMonth()+1}.${today.getDate()}`;return<WorkOrderModal items={form.quoteItems.map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:form.wDeduct||0,hDeduct:form.hDeduct||0}))} results={form.quoteItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={clientName} shipDate={form.shipDate||""} onClose={()=>setShowWO(false)}/>;})()}
+      {showWO&&(()=>{const today=new Date();const dateStr=`${today.getFullYear()-1911}.${today.getMonth()+1}.${today.getDate()}`;const woClientName=form.clientName!==undefined?form.clientName:clientName;return<WorkOrderModal items={form.quoteItems.map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:form.wDeduct||0,hDeduct:form.hDeduct||0}))} results={form.quoteItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={woClientName} shipDate={form.shipDate||""} onClose={()=>setShowWO(false)}/>;})()}
     </Modal>
   );
 }
