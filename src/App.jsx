@@ -559,7 +559,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           })()}
         </>}
         <QRow label="尺寸（mm）">
-          {item.dt==="L型二門"?<><span style={{fontSize:12}}>W1</span><QInput type="number" value={item.wMm} onChange={e=>s("wMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/><span style={{fontSize:12}}>W2</span><QInput type="number" value={item.wMm2} onChange={e=>s("wMm2",Number(e.target.value))} min={100} max={3000} style={{width:90}}/></>:<><span style={{fontSize:12}}>W</span><QInput type="number" value={item.wMm} onChange={e=>s("wMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/></>}
+          {(item.dt==="L型二門"||item.dt==="圓弧型")?<><span style={{fontSize:12}}>W1</span><QInput type="number" value={item.wMm} onChange={e=>s("wMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/><span style={{fontSize:12}}>W2</span><QInput type="number" value={item.wMm2||""} onChange={e=>s("wMm2",Number(e.target.value))} min={100} max={3000} style={{width:90}}/></>:<><span style={{fontSize:12}}>W</span><QInput type="number" value={item.wMm} onChange={e=>s("wMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/></>}
           <span style={{fontSize:12}}>H</span>
           {item.dt==="圓弧型"&&item.mat==="5mm強化清玻"?<span style={{fontSize:11,color:"#888"}}>H1880（固定）</span>:<QInput type="number" value={item.hMm} onChange={e=>s("hMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/>}
         </QRow>
@@ -643,7 +643,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
           {validItems.map((item,idx)=>{
             const wR=item.wMm/10;
             const hR=item.hMm/10;
-            const wDeductVal=item.wDeductItem||0;
+            const wDeductVal=item.wDeductItem!=null&&item.wDeductItem!==0?item.wDeductItem:(wDeduct||0);
             const hDeductVal=item.hDeduct||0;
             const wFinal=wDeductVal>0?(wR-wDeductVal).toFixed(1):wR;
             const w2R=item.wMm2?item.wMm2/10:null;
@@ -653,7 +653,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
             const towelText=getTowelText(item);
             const isFixedPlate=item.dt==="固定片";
             const thrMmVal=item.thrMm||0;
-            const sizeStr=item.dt==="L型二門"?`W${wFinal}*W${w2Final||w2R}*H${hFinal}`:`W${wFinal}*H${hFinal}`;
+            const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wFinal}*W${w2Final||w2R}*H${hFinal}`:`W${wFinal}*H${hFinal}`;
             const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,towelText].filter(Boolean).join("  ");
             const deductLine=[wDeductVal>0?`丈量扣${wDeductVal}`:"",hDeductVal>0?`高扣${hDeductVal}`:""].filter(Boolean).join("　");
 
