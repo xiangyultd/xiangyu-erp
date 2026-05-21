@@ -634,7 +634,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
         </div>
       </div>
       <div style={{flex:1,overflowY:"auto",padding:"16px 20px"}}>
-        <div ref={ref} style={{background:"#fff",padding:"28px 32px",fontFamily:woFF,width:480,boxSizing:"border-box",fontSize:15,lineHeight:1.9,color:"#000"}}>
+        <div ref={ref} style={{background:"#fff",padding:"28px 32px",fontFamily:woFF,width:480,boxSizing:"border-box",fontSize:15,lineHeight:1.9,color:"#000",textAlign:"left"}}>
 
           <div style={{marginBottom:20,fontSize:14}}>
             {dateStr}　BW0800　（{clientName||custName||""}）
@@ -643,15 +643,18 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
           {validItems.map((item,idx)=>{
             const wR=item.wMm/10;
             const hR=item.hMm/10;
-            const wDeductVal=item.wDeductItem||wDeduct||0;
+            const wDeductVal=item.wDeductItem||0;
             const hDeductVal=item.hDeduct||0;
             const wFinal=wDeductVal>0?(wR-wDeductVal).toFixed(1):wR;
+            const w2R=item.wMm2?item.wMm2/10:null;
+            const w2Final=wDeductVal>0&&w2R?(w2R-wDeductVal).toFixed(1):w2R;
             const hFinal=hDeductVal>0?(hR-hDeductVal).toFixed(1):hR;
             const dir=item.direction||"";
             const towelText=getTowelText(item);
             const isFixedPlate=item.dt==="固定片";
             const thrMmVal=item.thrMm||0;
-            const sizeLine=[`W${wFinal}*H${hFinal}`,dir,towelText].filter(Boolean).join("  ");
+            const sizeStr=item.dt==="L型二門"?`W${wFinal}*W${w2Final||w2R}*H${hFinal}`:`W${wFinal}*H${hFinal}`;
+            const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,towelText].filter(Boolean).join("  ");
             const deductLine=[wDeductVal>0?`丈量扣${wDeductVal}`:"",hDeductVal>0?`高扣${hDeductVal}`:""].filter(Boolean).join("　");
 
             return(
