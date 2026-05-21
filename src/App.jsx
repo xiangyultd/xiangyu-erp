@@ -651,7 +651,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
             const towelText=getTowelText(item);
             const isFixedPlate=item.dt==="固定片";
             const thrMmVal=item.thrMm||0;
-            const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wFinal}*W${w2Final||w2R}*H${hFinal}`:`W${wFinal}*H${hFinal}`;
+            const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wR}*W${w2R}*H${hR}`:`W${wR}*H${hR}`;
             const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,towelText].filter(Boolean).join("  ");
             const deductLine=[wDeductVal>0?`丈量扣${wDeductVal}`:"",hDeductVal>0?`高扣${hDeductVal}`:""].filter(Boolean).join("　");
 
