@@ -712,7 +712,7 @@ function QuotationSystem({onCreateOrder}){
     const productDesc=q.items.map(item=>{
       if(item.cat==="加購品"){const t=item.addonType||"毛巾桿";return t==="自填"?(item.addonName||"加購品"):t;}
       if(item.dt==="固定片")return`固定片 ${item.mat||""} ${item.col||""}`.trim();
-      if(item.cat==="有框")return`${item.dt}（${item.col}）${item.mat} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}`;
+      if(item.cat==="有框")return`${item.dt}（${item.col}）${item.mat} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}${item.direction?" "+item.direction:""}`;
       return`${item.dt} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}`;
     }).join("、");
     const order={cust:q.custName||"",phone:q.custPhone||"",addr:q.addr||"",master:q.master,region:q.region,wDeduct:0,note:`報價金額 $${fmtMoney(q.grandTotal)}`,scheduled:false,ordered:false,product:productDesc,shipMethod:q.master==="進南貨運"?"寄進南":q.master==="自取"?"自取":q.master==="賴彥銘"?"載":q.master==="郭師傅"&&q.region==="台南"?"寄台南站址":q.master==="郭師傅"?"寄高雄站址":"寄松成",quoteItems:q.items.map(item=>({...item,cat:item.cat||"有框"})),orderDate:new Date().toISOString().slice(0,10)};
@@ -839,7 +839,7 @@ function QuotationSystem({onCreateOrder}){
     const productDesc=items.map(item=>{
       if(item.cat==="加購品"){const t=item.addonType||"毛巾桿";return t==="自填"?(item.addonName||"加購品"):t;}
       if(item.dt==="固定片")return`固定片 ${item.mat} ${item.col} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}`;
-      if(item.cat==="有框")return`${item.dt}（${item.col}）${item.mat} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}`;
+      if(item.cat==="有框")return`${item.dt}（${item.col}）${item.mat} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}${item.direction?" "+item.direction:""}`;
       return`${item.dt} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}`;
     }).join("、");
     const order={
