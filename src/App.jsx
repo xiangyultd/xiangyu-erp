@@ -137,10 +137,10 @@ function HomePage(){
 
   useEffect(()=>{if(homeTab==="board")msgEndRef.current?.scrollIntoView({behavior:"smooth"});},[messages,homeTab]);
 
-  function sendMsg(){const text=msgInput.trim();if(!text)return;const m={id:Date.now(),user:currentUser,text,time:new Date().toISOString(),pinned:false};setMessages(p=>[...p,m]);setMsgInput("");sb.upsert("messages",{id:m.id,data:m});}
+  function sendMsg(){const text=msgInput.trim();if(!text)return;const m={id:Math.floor(Date.now()/1000),user:currentUser,text,time:new Date().toISOString(),pinned:false};setMessages(p=>[...p,m]);setMsgInput("");sb.upsert("messages",{id:m.id,data:m});}
   function pinMsg(id){setMessages(p=>p.map(m=>{if(m.id!==id)return m;const u={...m,pinned:!m.pinned};sb.upsert("messages",{id:u.id,data:u});return u;}));}
   function deleteMsg(id){setMessages(p=>p.filter(m=>m.id!==id));sb.delete("messages",id);}
-  function addTodo(){const text=todoInput.trim();if(!text)return;const t={id:Date.now(),text,done:false,priority:todoPriority,assignee:todoAssignee,time:new Date().toISOString()};setTodos(p=>[t,...p]);setTodoInput("");sb.upsert("todos",{id:t.id,data:t});}
+  function addTodo(){const text=todoInput.trim();if(!text)return;const t={id:Math.floor(Date.now()/1000),text,done:false,priority:todoPriority,assignee:todoAssignee,time:new Date().toISOString()};setTodos(p=>[t,...p]);setTodoInput("");sb.upsert("todos",{id:t.id,data:t});}
   function toggleTodo(id){setTodos(p=>p.map(t=>{if(t.id!==id)return t;const u={...t,done:!t.done};sb.upsert("todos",{id:u.id,data:u});return u;}));}
   function deleteTodo(id){setTodos(p=>p.filter(t=>t.id!==id));sb.delete("todos",id);}
 
@@ -707,7 +707,7 @@ function QuotationSystem({onCreateOrder}){
   function handleSaveQuote(){
     if(grandTotal===0)return;
     const itemsWithResults=items.map((it,i)=>({...it,...(results[i]&&!results[i].error&&!results[i].blocked&&!results[i].pending?{productPrice:results[i].productPrice,installFee:results[i].installFee,installFeeBase:results[i].installFeeBase,shipSurcharge:results[i].shipSurcharge,floorFee:results[i].floorFee,thresholdPrice:results[i].thresholdPrice,thresholdInstallFee:results[i].thresholdInstallFee,towelPrice:results[i].towelPrice}:{})}));
-    const q={id:Date.now(),custName,custPhone,custLine,addr,master,region,grandTotal,qDate,vDate,items:itemsWithResults,status:"有效",convertedAt:null};
+    const q={id:Math.floor(Date.now()/1000),custName,custPhone,custLine,addr,master,region,grandTotal,qDate,vDate,items:itemsWithResults,status:"有效",convertedAt:null};
     setQuotes(p=>[q,...p]);
     sb.upsert("quotes",{id:q.id,data:q});
     setSavedQuote(true);setTimeout(()=>setSavedQuote(false),2000);
@@ -1391,7 +1391,7 @@ function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete})
       </div>
       <div style={{padding:"12px 20px",borderTop:"1px solid #F3F4F6",display:"flex",gap:10}}>
         <button onClick={onClose} style={{flex:1,padding:11,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",fontFamily:ff,fontWeight:600}}>取消</button>
-        <button onClick={()=>onSave({...form,id:order?.id||Date.now()})} style={{flex:2,padding:11,borderRadius:10,border:"none",background:master.color,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:ff}}>{isEdit?"儲存修改":"新增排程"}</button>
+        <button onClick={()=>onSave({...form,id:order?.id||Math.floor(Date.now()/1000)})} style={{flex:2,padding:11,borderRadius:10,border:"none",background:master.color,color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:ff}}>{isEdit?"儲存修改":"新增排程"}</button>
       </div>
     </Modal>
   );
@@ -1945,7 +1945,7 @@ function PendingOrderForm({order,onSave,onClose}){
       </div>
       <div style={{padding:"12px 20px",borderTop:"1px solid #F3F4F6",display:"flex",gap:10}}>
         <button onClick={onClose} style={{flex:1,padding:11,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",fontFamily:ff,fontWeight:600}}>取消</button>
-        <button onClick={()=>onSave({...form,id:order?.id||Date.now(),scheduled:order?.scheduled||false,customer:form.cust||"",address:form.addr||""})} style={{flex:2,padding:11,borderRadius:10,border:"none",background:"#1E293B",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:ff}}>{isEdit?"儲存修改":"新增訂單"}</button>
+        <button onClick={()=>onSave({...form,id:order?.id||Math.floor(Date.now()/1000),scheduled:order?.scheduled||false,customer:form.cust||"",address:form.addr||""})} style={{flex:2,padding:11,borderRadius:10,border:"none",background:"#1E293B",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:ff}}>{isEdit?"儲存修改":"新增訂單"}</button>
       </div>
       {showWO&&(()=>{const today=new Date();const dateStr=`${today.getFullYear()-1911}.${today.getMonth()+1}.${today.getDate()}`;const woClientName=form.clientName!==undefined?form.clientName:clientName;return<WorkOrderModal items={form.quoteItems.map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:form.wDeduct||0,hDeduct:form.hDeduct||0}))} results={form.quoteItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={woClientName} shipDate={form.shipDate||""} onClose={()=>setShowWO(false)}/>;})()}
     </Modal>
@@ -1998,7 +1998,7 @@ export default function App(){
 
   // 訂單操作（自動同步 Supabase）
   function savePendingOrder(order){
-    const toSave={...order,id:order.id||Date.now(),customer:order.cust||order.customer||"",address:order.addr||order.address||""};
+    const toSave={...order,id:order.id||Math.floor(Date.now()/1000),customer:order.cust||order.customer||"",address:order.addr||order.address||""};
     setPendingOrders(prev=>prev.find(x=>x.id===toSave.id)?prev.map(x=>x.id===toSave.id?toSave:x):[...prev,toSave]);
     sb.upsert("pending_orders",{id:toSave.id,data:toSave});
     return toSave;
@@ -2014,14 +2014,14 @@ export default function App(){
   const filtered=useMemo(()=>orders.filter(o=>filterMaster==="all"||o.masterId===filterMaster),[orders,filterMaster]);
   const dayOrders=useMemo(()=>selectedDate?filtered.filter(o=>o.date===selectedDate):[],[selectedDate,filtered]);
   const addOrder=o=>{
-    const newO={...o,id:o.id||Date.now()};
+    const newO={...o,id:o.id||Math.floor(Date.now()/1000)};
     saveScheduleOrder(newO);
     setShowForm(false);
     setPendingAddDate(null);
     const exists=pendingOrders.find(p=>(p.cust||p.customer||"")===(newO.customer||"")&&(p.addr||p.address||"")===(newO.address||""));
     let newPending=null;
     if(!exists&&newO.customer){
-      newPending={id:Date.now()+1,cust:newO.customer,phone:newO.phone||"",addr:newO.address||"",master:MASTERS[newO.masterId]?.name||"余青陽",region:newO.area||"",product:newO.product||"",shipMethod:newO.jobType==="純配送"?"寄進南":"安裝",wDeduct:0,ordered:false,scheduled:true,quoteItems:[]};
+      newPending={id:Math.floor(Date.now()/1000)+1,cust:newO.customer,phone:newO.phone||"",addr:newO.address||"",master:MASTERS[newO.masterId]?.name||"余青陽",region:newO.area||"",product:newO.product||"",shipMethod:newO.jobType==="純配送"?"寄進南":"安裝",wDeduct:0,ordered:false,scheduled:true,quoteItems:[]};
       savePendingOrder(newPending);
     }
     const target=newPending||exists;
@@ -2084,7 +2084,7 @@ export default function App(){
 
           <div style={{padding:"14px 18px",maxWidth:1080,margin:"0 auto"}}>
             {loading&&<div style={{textAlign:"center",padding:60,color:"#9CA3AF",fontSize:15}}>載入中...</div>}
-            {!loading&&tab==="quote"&&(<QuotationSystem onCreateOrder={p=>{savePendingOrder({...p,id:Date.now(),scheduled:false});setTab("pending");}}/>)}
+            {!loading&&tab==="quote"&&(<QuotationSystem onCreateOrder={p=>{savePendingOrder({...p,id:Math.floor(Date.now()/1000),scheduled:false});setTab("pending");}}/>)}
             {!loading&&tab==="pending"&&(<PendingOrdersTab pendingOrders={pendingOrders} onEdit={p=>{setEditPending(p);setShowPendingForm(true);}} onDelete={id=>deletePendingOrder(id)} onToggleOrdered={id=>{const o=pendingOrders.find(x=>x.id===id);if(o)updatePendingOrder(id,{ordered:!o.ordered});}}/>)}
             {!loading&&tab==="delivery"&&(<DeliveryTab pendingOrders={pendingOrders} autoOpen={autoOpenDelivery} onAutoOpenDone={()=>setAutoOpenDelivery(null)} onMarkShipped={(id,invoiceNo,total)=>updatePendingOrder(id,{shipped:true,shippedAt:new Date().toISOString().slice(0,10),invoiceNo,shippedTotal:total})}/>)}
             {tab==="calendar"&&(<>
@@ -2105,7 +2105,7 @@ export default function App(){
           {(showForm||editOrder)&&(<OrderForm order={editOrder} defaultDate={pendingAddDate||todayStr} pendingOrders={pendingOrders.filter(p=>!p.scheduled)} onSave={o=>{if(editOrder){saveOrder(o);}else{addOrder(o);}}} onClose={()=>{setShowForm(false);setEditOrder(null);setPendingAddDate(null);}} onDelete={deleteOrder}/>)}
           {wageCalcMaster&&<WageCalc master={wageCalcMaster} onClose={()=>setWageCalcMaster(null)}/>}
           {showPendingForm&&(<PendingOrderForm order={editPending?.id?editPending:null} onSave={p=>{
-            savePendingOrder({...p,id:editPending?.id||Date.now(),scheduled:editPending?.scheduled||false});
+            savePendingOrder({...p,id:editPending?.id||Math.floor(Date.now()/1000),scheduled:editPending?.scheduled||false});
             setShowPendingForm(false);setEditPending(null);
           }} onClose={()=>{setShowPendingForm(false);setEditPending(null);}}/>)}
         </div>
