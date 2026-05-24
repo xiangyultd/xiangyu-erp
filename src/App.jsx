@@ -6,7 +6,9 @@ const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 async function sbFetch(table,method="GET",body=null,match=null){
   let url=SUPABASE_URL+"/rest/v1/"+table;
   if(match)url+="?"+Object.entries(match).map(([k,v])=>k+"=eq."+v).join("&");
-  const res=await fetch(url,{method,headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":method==="POST"?"resolution=merge-duplicates":""},body:body?JSON.stringify(body):null});
+  const headers={"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"};
+  if(method==="POST")headers["Prefer"]="resolution=merge-duplicates,return=minimal";
+  const res=await fetch(url,{method,headers,body:body?JSON.stringify(body):null});
   if(method==="GET")return res.json();
   return res.ok;
 }
