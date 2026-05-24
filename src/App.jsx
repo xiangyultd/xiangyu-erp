@@ -1952,14 +1952,6 @@ function PendingOrderForm({order,onSave,onClose}){
   );
 }
 
-const SEED_ORDERS=[
-  {id:1,masterId:"qingyang",area:"台北",jobType:"拆裝",customer:"林嘉威",phone:"0976588977",address:"台北市南港區舊莊街一段181號4樓之1 無電梯",product:"一字二門（白）5mmPS101 W148×H200 右開",date:"2026-04-11",timeSlot:"下午",appointTime:"",status:"完成",floor:4,hasThreshold:true,hasThresholdReplace:false,isLType:false,hasFixedPlate:false,extras:[],extraCustom:0,note:"無尾款。現場左伸縮料要切有水管。",hasShipping:true,carrier:"進南貨運",shipDate:"2026-04-02",shipStatus:"已到站",collectOnSite:false,collectedAmount:0,collectStatus:"已收",wagePayStatus:"待付",monthlySettled:false,hasElevator:false},
-  {id:2,masterId:"qingyang",area:"新北",jobType:"安裝",customer:"王欣怡",phone:"0931-168-070",address:"新北市三重區名源街48號3樓 無電梯",product:"一字二門（黑）5mm清玻貼防爆砂膜 W128×H200",date:"2026-04-04",timeSlot:"下午",appointTime:"",status:"完成",floor:3,hasThreshold:true,hasThresholdReplace:false,isLType:false,hasFixedPlate:false,extras:[],extraCustom:0,note:"前一天電聯。",hasShipping:true,carrier:"進南貨運",shipDate:"2026-04-01",shipStatus:"已到站",collectOnSite:true,collectedAmount:8760,collectStatus:"已收",wagePayStatus:"待付",monthlySettled:false,hasElevator:false},
-  {id:3,masterId:"laiyanming",area:"台中",jobType:"安裝",customer:"陳志明",phone:"0912345678",address:"台中市西屯區大墩路500號5樓",product:"一字三門（銀）5mmPS503 W150×H190",date:"2026-04-15",timeSlot:"上午",appointTime:"10:00",status:"已確認",floor:5,hasThreshold:false,hasThresholdReplace:false,isLType:false,hasFixedPlate:false,extras:[],extraCustom:0,note:"",hasShipping:true,carrier:"進南貨運",shipDate:"2026-04-13",shipStatus:"已到站",collectOnSite:true,collectedAmount:6200,collectStatus:"待收",wagePayStatus:"待付",monthlySettled:false,hasElevator:true},
-  {id:4,masterId:"guo",area:"高雄",jobType:"安裝",customer:"李美華",phone:"0987654321",address:"高雄市前鎮區瑞隆路200號3樓",product:"一字三門（白）5mmPS101 W140×H185",date:"2026-04-18",timeSlot:"下午",appointTime:"",status:"待確認",floor:3,hasThreshold:false,hasThresholdReplace:false,isLType:false,hasFixedPlate:false,extras:[],extraCustom:0,note:"",hasShipping:false,carrier:"",shipDate:"",shipStatus:"待寄出",collectOnSite:false,collectedAmount:0,collectStatus:"待收",wagePayStatus:"待付",monthlySettled:false,hasElevator:false},
-  {id:5,masterId:"qingyang",area:"新北",jobType:"安裝",customer:"吳懷珍",phone:"0912828870",address:"新北市中和區橋和路160巷21號6樓（有電梯）",product:"一字三門（白）PS501-5mm W128×H190",date:"2026-04-24",timeSlot:"上午",appointTime:"",status:"已確認",floor:6,hasThreshold:true,hasThresholdReplace:false,isLType:false,hasFixedPlate:false,extras:[],extraCustom:0,note:"安裝前一天通知準確時間。",hasShipping:true,carrier:"進南貨運",shipDate:"2026-04-22",shipStatus:"已寄出",collectOnSite:true,collectedAmount:5362,collectStatus:"待收",wagePayStatus:"待付",monthlySettled:false,hasElevator:true},
-];
-
 // ─── 主頁面切換包裝 ───────────────────────────────────────────────────────────
 export default function App(){
   const [mainTab, setMainTab] = useState("erp");
@@ -1968,8 +1960,8 @@ export default function App(){
   useEffect(()=>{
     sb.getAll("orders").then(rows=>{
       if(rows&&rows.length)setOrders(rows.map(r=>r.data));
-      else setOrders(SEED_ORDERS);
-    }).catch(()=>setOrders(SEED_ORDERS));
+      else setOrders([]);
+    }).catch(()=>setOrders([]));
   },[]);
 
   function saveScheduleOrder(o){
