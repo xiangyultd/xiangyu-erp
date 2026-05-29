@@ -644,8 +644,8 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
           </div>
 
           {validItems.map((item,idx)=>{
-            const wR=item.wMm/10;
-            const hR=item.hMm/10;
+            const wR=parseFloat((item.wMm/10).toFixed(1));
+            const hR=parseFloat((item.hMm/10).toFixed(1));
             const wDeductVal=item.wDeductItem!=null&&item.wDeductItem!==0?item.wDeductItem:(wDeduct||0);
             const hDeductVal=item.hDeduct||0;
             const wFinal=wDeductVal>0?(wR-wDeductVal).toFixed(1):wR;
@@ -656,7 +656,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
             const towelText=getTowelText(item);
             const isFixedPlate=item.dt==="固定片";
             const thrMmVal=item.thrMm||0;
-            const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wFinal}*W${w2Final||wR}*H${hFinal}`:`W${wFinal}*H${hFinal}`;
+            const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wR}*W${w2R||wR}*H${hR}`:`W${wR}*H${hR}`;
             const looseParts=item.looseParts?"散裝":""; const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,looseParts,towelText].filter(Boolean).join("  ");
             const deductLine=[wDeductVal>0?`丈量扣${wDeductVal}`:"",hDeductVal>0?`高扣${hDeductVal}`:""].filter(Boolean).join("　");
 
@@ -802,12 +802,12 @@ function QuotationSystem({onCreateOrder}){
         if((r.shipFee||0)>0)lines.push(`運費：$${fmtMoney(r.shipFee)}`);
       } else if(item.dt==="固定片"){
         lines.push(`固定片／${item.mat}／${item.col}`);
-        lines.push(`尺寸：W${item.wMm/10} × H${item.hMm/10} cm`);
+        lines.push(`尺寸：W${(item.wMm/10).toFixed(1).replace(/\.0$/,"")} × H${(item.hMm/10).toFixed(1).replace(/\.0$/,"")} cm`);
         lines.push(`產品費用：$${fmtMoney(r.productPrice)}`);
         const adjAmt=item.adjust||0;const instDisplay=(r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+adjAmt;if(instDisplay>0)lines.push(`安裝費：$${fmtMoney(instDisplay)}`);
       } else if(item.dt==="L型二門"||item.dt==="圓弧型"){
         lines.push(`${item.dt}／${item.mat}／${item.col}`);
-        lines.push(`尺寸：W${item.wMm/10} × W${(item.wMm2||item.wMm)/10} × H${item.hMm/10} cm`);
+        lines.push(`尺寸：W${(item.wMm/10).toFixed(1).replace(/\.0$/,"")} × W${((item.wMm2||item.wMm)/10).toFixed(1).replace(/\.0$/,"")} × H${(item.hMm/10).toFixed(1).replace(/\.0$/,"")} cm`);
         lines.push(`產品費用：$${fmtMoney(r.productPrice)}`);
         const adjAmt=item.adjust||0;const instDisplay=(r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+adjAmt;if(instDisplay>0)lines.push(`安裝費：$${fmtMoney(instDisplay)}`);
         if(r.floorFee>0)lines.push(`樓層費（${floor}樓）：$${fmtMoney(r.floorFee)}`);
@@ -898,7 +898,7 @@ function QuotationSystem({onCreateOrder}){
                 {item.cat==="加購品"?(()=>{const t=item.addonType||"毛巾桿";const col=item.addonCol?`（${item.addonCol}）`:"";return t==="自填"?(item.addonName||"加購品"):(t+col);})():item.dt==="固定片"?`固定片／${item.mat}／${item.col}`:`${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`}
               </div>
               {item.cat!=="加購品"&&<div style={{fontSize:13,color:"#555",marginBottom:6}}>
-                {(item.dt==="L型二門"||item.dt==="圓弧型")?`W${item.wMm/10} × W${(item.wMm2||item.wMm)/10} × H${item.hMm/10} cm`:`W${item.wMm/10} × H${item.hMm/10} cm`}
+                {(item.dt==="L型二門"||item.dt==="圓弧型")?`W${(item.wMm/10).toFixed(1).replace(/\.0$/,"")} × W${((item.wMm2||item.wMm)/10).toFixed(1).replace(/\.0$/,"")} × H${(item.hMm/10).toFixed(1).replace(/\.0$/,"")} cm`:`W${(item.wMm/10).toFixed(1).replace(/\.0$/,"")} × H${(item.hMm/10).toFixed(1).replace(/\.0$/,"")} cm`}
               </div>}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>產品費用</span><span style={{fontWeight:600}}>${fmtMoney(r.productPrice)}</span></div>
               {(r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+(item.cat==="加購品"?0:item.adjust||0)>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>安裝費</span><span style={{fontWeight:600}}>${fmtMoney((r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+(item.cat==="加購品"?0:item.adjust||0))}</span></div>}
@@ -1912,7 +1912,7 @@ function PendingOrderForm({order,onSave,onClose}){
                   const desc=newItems.map(it=>{
                     if(it.cat==="加購品"){const t=it.addonType||"毛巾桿";return t==="自填"?(it.addonName||"加購品"):t;}
                     if(it.dt==="固定片")return`固定片 ${it.mat||""} ${it.col||""} W${Math.round(it.wMm/10)}×H${Math.round(it.hMm/10)}`;
-                    if(it.cat==="有框")return`${it.dt}（${it.col}）${it.mat} W${Math.round(it.wMm/10)}×H${Math.round(it.hMm/10)}${it.direction?" "+it.direction:""}${it.looseParts?" 散裝":""}`;
+                    if(it.cat==="有框")return`${it.dt}（${it.col}）${it.mat} W${(it.wMm/10).toFixed(1).replace(/\.0$/,"")}×H${(it.hMm/10).toFixed(1).replace(/\.0$/,"")}${it.direction?" "+it.direction:""}${it.looseParts?" 散裝":""}`;
                     return`${it.dt} W${Math.round(it.wMm/10)}×H${Math.round(it.hMm/10)}`;
                   }).join("、");
                   set("product",desc);
