@@ -466,7 +466,7 @@ function QTag({children,color}){return(<span style={{background:color+"22",color
 function QSection({title,children,accent}){return(<div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}><div style={{background:accent?"#1a1a1a":"#f0efe9",color:accent?"#fff":"#1a1a1a",padding:"9px 15px",fontWeight:700,fontSize:13,letterSpacing:1}}>{title}</div><div style={{padding:"11px 15px",display:"flex",flexDirection:"column",gap:9}}>{children}</div></div>);}
 function QLineItem({label,value}){return(<div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:"#444"}}>{label}</span><span style={{fontWeight:500}}>${fmtMoney(value)}</span></div>);}
 
-function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:""};}
+function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:"",looseParts:false};}
 
 function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove,canRemove}){
   const s=(k,v)=>onUpdate({...item,[k]:v});
@@ -560,7 +560,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           {(()=>{
             const dirOpts=item.dt==="一字四門"?["雙固","左固","右固","四片活動"]:item.dt==="一字二門"||item.dt==="一字三門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="L型二門"?["對開"]:item.dt==="固定片"?["左固","右固"]:null;
             if(!dirOpts)return null;
-            return <QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow>;
+            return <><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/></QRow></>;
           })()}
         </>}
         <QRow label="尺寸（mm）">
@@ -656,8 +656,8 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
             const towelText=getTowelText(item);
             const isFixedPlate=item.dt==="固定片";
             const thrMmVal=item.thrMm||0;
-            const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wR}*W${w2R}*H${hR}`:`W${wR}*H${hR}`;
-            const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,towelText].filter(Boolean).join("  ");
+            const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wFinal}*W${w2Final||wR}*H${hFinal}`:`W${wFinal}*H${hFinal}`;
+            const looseParts=item.looseParts?"散裝":""; const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,looseParts,towelText].filter(Boolean).join("  ");
             const deductLine=[wDeductVal>0?`丈量扣${wDeductVal}`:"",hDeductVal>0?`高扣${hDeductVal}`:""].filter(Boolean).join("　");
 
             return(
@@ -805,9 +805,9 @@ function QuotationSystem({onCreateOrder}){
         lines.push(`尺寸：W${item.wMm/10} × H${item.hMm/10} cm`);
         lines.push(`產品費用：$${fmtMoney(r.productPrice)}`);
         const adjAmt=item.adjust||0;const instDisplay=(r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+adjAmt;if(instDisplay>0)lines.push(`安裝費：$${fmtMoney(instDisplay)}`);
-      } else if(item.dt==="L型二門"){
+      } else if(item.dt==="L型二門"||item.dt==="圓弧型"){
         lines.push(`${item.dt}／${item.mat}／${item.col}`);
-        lines.push(`尺寸：W${item.wMm/10} × W${item.wMm2/10} × H${item.hMm/10} cm`);
+        lines.push(`尺寸：W${item.wMm/10} × W${(item.wMm2||item.wMm)/10} × H${item.hMm/10} cm`);
         lines.push(`產品費用：$${fmtMoney(r.productPrice)}`);
         const adjAmt=item.adjust||0;const instDisplay=(r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+adjAmt;if(instDisplay>0)lines.push(`安裝費：$${fmtMoney(instDisplay)}`);
         if(r.floorFee>0)lines.push(`樓層費（${floor}樓）：$${fmtMoney(r.floorFee)}`);
@@ -898,7 +898,7 @@ function QuotationSystem({onCreateOrder}){
                 {item.cat==="加購品"?(()=>{const t=item.addonType||"毛巾桿";const col=item.addonCol?`（${item.addonCol}）`:"";return t==="自填"?(item.addonName||"加購品"):(t+col);})():item.dt==="固定片"?`固定片／${item.mat}／${item.col}`:`${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`}
               </div>
               {item.cat!=="加購品"&&<div style={{fontSize:13,color:"#555",marginBottom:6}}>
-                {item.dt==="L型二門"?`W${item.wMm/10} × W${item.wMm2/10} × H${item.hMm/10} cm`:`W${item.wMm/10} × H${item.hMm/10} cm`}
+                {(item.dt==="L型二門"||item.dt==="圓弧型")?`W${item.wMm/10} × W${(item.wMm2||item.wMm)/10} × H${item.hMm/10} cm`:`W${item.wMm/10} × H${item.hMm/10} cm`}
               </div>}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>產品費用</span><span style={{fontWeight:600}}>${fmtMoney(r.productPrice)}</span></div>
               {(r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+(item.cat==="加購品"?0:item.adjust||0)>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>安裝費</span><span style={{fontWeight:600}}>${fmtMoney((r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+(item.cat==="加購品"?0:item.adjust||0))}</span></div>}
@@ -1887,7 +1887,7 @@ function PendingOrderForm({order,onSave,onClose}){
   const clientName=genClientName(form.master||"余青陽",form.cust||"",form.region||"",form.addr||"");
   const isShip=(form.master==="進南貨運"||form.master==="自取");
   return(
-    <Modal onClose={onClose} width={480}>
+    <Modal onClose={onClose} width={680}>
       <div style={{padding:"16px 20px 12px",borderBottom:"1px solid #F3F4F6",display:"flex",justifyContent:"space-between"}}>
         <div style={{fontWeight:800,fontSize:16}}>{isEdit?"✏️ 編輯訂單":"＋ 新增待安裝訂單"}</div>
         <button onClick={onClose} style={{border:"none",background:"none",fontSize:22,cursor:"pointer",color:"#9CA3AF"}}>✕</button>
@@ -1899,7 +1899,38 @@ function PendingOrderForm({order,onSave,onClose}){
             <div><label style={lbl}>聯絡電話</label><input value={form.phone||""} onChange={e=>set("phone",e.target.value)} style={inp} placeholder="0912-345-678"/></div>
           </div>
           <div><label style={lbl}>施工地址</label><input value={form.addr||""} onChange={e=>set("addr",e.target.value)} style={{...inp}} placeholder="台北市信義區..."/></div>
-          <div><label style={lbl}>品項描述</label><input value={form.product||""} onChange={e=>set("product",e.target.value)} style={inp} placeholder="一字三門（白）5mmPS101 W150×H190"/></div>
+          <div>
+            <div style={{fontWeight:700,fontSize:13,color:"#374151",marginBottom:8}}>門型品項</div>
+            {(form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[{...defItem(),id:Math.floor(Date.now()/1000)}]).map((item,idx)=>(
+              <DoorItemForm key={item.id||idx} item={item} idx={idx}
+                floor={1} elev={false} fpFee={0}
+                master={form.master||"余青陽"} region={form.region||""}
+                onUpdate={updated=>{
+                  const items=form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[{...defItem(),id:Math.floor(Date.now()/1000)}];
+                  const newItems=items.map((it,i)=>i===idx?updated:it);
+                  set("quoteItems",newItems);
+                  const desc=newItems.map(it=>{
+                    if(it.cat==="加購品"){const t=it.addonType||"毛巾桿";return t==="自填"?(it.addonName||"加購品"):t;}
+                    if(it.dt==="固定片")return`固定片 ${it.mat||""} ${it.col||""} W${Math.round(it.wMm/10)}×H${Math.round(it.hMm/10)}`;
+                    if(it.cat==="有框")return`${it.dt}（${it.col}）${it.mat} W${Math.round(it.wMm/10)}×H${Math.round(it.hMm/10)}${it.direction?" "+it.direction:""}${it.looseParts?" 散裝":""}`;
+                    return`${it.dt} W${Math.round(it.wMm/10)}×H${Math.round(it.hMm/10)}`;
+                  }).join("、");
+                  set("product",desc);
+                }}
+                onRemove={()=>{
+                  const items=form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[];
+                  if(items.length<=1)return;
+                  const newItems=items.filter((_,i)=>i!==idx);
+                  set("quoteItems",newItems);
+                }}
+                canRemove={(form.quoteItems||[]).length>1}
+              />
+            ))}
+            <button onClick={()=>{
+              const items=form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[];
+              set("quoteItems",[...items,{...defItem(),id:Math.floor(Date.now()/1000)}]);
+            }} style={{width:"100%",padding:"8px",borderRadius:8,border:"2px dashed #ddd",background:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,color:"#888",marginBottom:4}}>＋ 新增門型</button>
+          </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
             <div><label style={lbl}>師傅</label><select value={form.master||"余青陽"} onChange={e=>{const m=e.target.value;set("master",m);const autoShip=m==="余青陽"?"寄松成":m==="賴彥銘"?"載":m==="郭師傅"?(form.region==="台南"?"寄台南站址":"寄高雄站址"):m==="進南貨運"?"寄進南":m==="自取"?"自取":"寄松成";set("shipMethod",autoShip);}} style={sel}>{["余青陽","賴彥銘","郭師傅","進南貨運","自取"].map(m=><option key={m}>{m}</option>)}</select></div>
             <div><label style={lbl}>W扣尺寸</label><select value={form.wDeduct||0} onChange={e=>set("wDeduct",Number(e.target.value))} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
@@ -1934,20 +1965,22 @@ function PendingOrderForm({order,onSave,onClose}){
               <div><label style={lbl}>收款日期</label><input type="date" value={form.finalDate||""} onChange={e=>set("finalDate",e.target.value)} style={inp}/></div>
             </div>}
           </div>
-          {isEdit&&form.quoteItems&&form.quoteItems.length>0&&(
-            <div>
-              <label style={lbl}>出工單</label>
-              <button onClick={()=>setShowWO(true)} style={{width:"100%",padding:"10px",borderRadius:8,border:"none",background:"#7c3aed",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:ff}}>🖨️ 預覽工單 / 下載PNG</button>
-              {form.ordered&&<div style={{marginTop:6,fontSize:12,color:"#059669",fontWeight:700}}>✅ 已下單 {form.orderedAt||""}</div>}
-            </div>
-          )}
+          <div>
+            <button onClick={()=>setShowWO(true)} style={{width:"100%",padding:"10px",borderRadius:8,border:"none",background:"#7c3aed",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:ff}}>🖨️ 預覽工單 / 下載PNG</button>
+            {form.ordered&&<div style={{marginTop:6,fontSize:12,color:"#059669",fontWeight:700}}>✅ 已下單 {form.orderedAt||""}</div>}
+          </div>
         </div>
       </div>
       <div style={{padding:"12px 20px",borderTop:"1px solid #F3F4F6",display:"flex",gap:10}}>
         <button onClick={onClose} style={{flex:1,padding:11,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",fontFamily:ff,fontWeight:600}}>取消</button>
         <button onClick={()=>onSave({...form,id:order?.id||Math.floor(Date.now()/1000),scheduled:order?.scheduled||false,customer:form.cust||"",address:form.addr||""})} style={{flex:2,padding:11,borderRadius:10,border:"none",background:"#1E293B",color:"#fff",fontWeight:800,fontSize:14,cursor:"pointer",fontFamily:ff}}>{isEdit?"儲存修改":"新增訂單"}</button>
       </div>
-      {showWO&&(()=>{const today=new Date();const dateStr=`${today.getFullYear()-1911}.${today.getMonth()+1}.${today.getDate()}`;const woClientName=form.clientName!==undefined?form.clientName:clientName;return<WorkOrderModal items={form.quoteItems.map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:form.wDeduct||0,hDeduct:form.hDeduct||0}))} results={form.quoteItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={woClientName} shipDate={form.shipDate||""} onClose={()=>setShowWO(false)}/>;})()}
+      {showWO&&(()=>{
+        const woItems=(form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[]).map(qi=>({...qi,id:(qi.wMm||0)+(qi.hMm||0)+(qi.dt||""),cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:form.wDeduct||0,hDeduct:form.hDeduct||0}));
+        const woResults=woItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}));
+        const woClientName=form.clientName!==undefined?form.clientName:clientName;
+        return<WorkOrderModal items={woItems} results={woResults} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={woClientName} shipDate={form.shipDate||""} onClose={()=>setShowWO(false)}/>;
+      })()}
     </Modal>
   );
 }
