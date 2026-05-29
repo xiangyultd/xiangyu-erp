@@ -417,7 +417,7 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   const cfg=FRAMED_BASE[doorType];if(!cfg)return null;
   const wR=roundTo100(wMm),hR=roundTo100(hMm),wR2=wMm2?roundTo100(wMm2):null;
   const matKey=["5mmPS101","5mmPS503","5mmPS501"].includes(material)?"5mmPS板":["3mmPS101","3mmPS503","3mmPS501"].includes(material)?"3mmPS板":material==="5mm強化銀霞玻貼清膜"?"5mm強化銀霞玻貼清膜":material;
-  const colKey=["白色","牙色"].includes(color)&&doorType!=="圓弧型"?"白/牙色":color;
+  const colKey=(["白色","牙色","白/牙色"].includes(color))&&doorType!=="圓弧型"?"白/牙色":color;
   const base=cfg.prices[matKey]?.[colKey]??0;
   const surW=cfg.surW[matKey]??0,surH=cfg.surH[matKey]??0;
   let extraW=0,extraH=0;
@@ -468,12 +468,12 @@ function QLineItem({label,value}){return(<div style={{display:"flex",justifyCont
 
 function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:"",looseParts:false};}
 
-function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove,canRemove}){
+function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove,canRemove,quoteMode}){
   const s=(k,v)=>onUpdate({...item,[k]:v});
-  const changeDt=t=>{const ms=FRAMED_MATS[t]||FRAMED_MATS.default;onUpdate({...item,dt:t,mat:ms[0],col:t==="圓弧型"?FRAMED_COLS.圓弧型[0]:FRAMED_COLS.default[0]});};
-  const changeCat=v=>{onUpdate({...item,cat:v,dt:v==="有框"?"一字二門":v==="無框"?"連動門":"",mat:v==="有框"?"5mmPS101":"",col:v==="有框"?"白色":"",addonType:"毛巾桿"});};
+  const changeDt=t=>{const ms=FRAMED_MATS[t]||FRAMED_MATS.default;onUpdate({...item,dt:t,mat:ms[0],col:t==="圓弧型"?FRAMED_COLS.圓弧型[0]:(quoteMode?"白/牙色":FRAMED_COLS.default[0])});};
+  const changeCat=v=>{onUpdate({...item,cat:v,dt:v==="有框"?"一字二門":v==="無框"?"連動門":"",mat:v==="有框"?"5mmPS101":"",col:v==="有框"?(quoteMode?"白/牙色":"白色"):"",addonType:"毛巾桿"});};
   const mats=FRAMED_MATS[item.dt]||FRAMED_MATS.default;
-  const cols=item.dt==="圓弧型"?FRAMED_COLS.圓弧型:FRAMED_COLS.default;
+  const cols=item.dt==="圓弧型"?FRAMED_COLS.圓弧型:(quoteMode?["白/牙色","銀色","黑色"]:FRAMED_COLS.default);
   const isFixedPlate=item.dt==="固定片";
   const result=useMemo(()=>{
     if(item.cat==="加購品"){
@@ -560,7 +560,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           {(()=>{
             const dirOpts=item.dt==="一字四門"?["雙固","左固","右固","四片活動"]:item.dt==="一字二門"||item.dt==="一字三門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="L型二門"?["對開"]:item.dt==="固定片"?["左固","右固"]:null;
             if(!dirOpts)return null;
-            return <><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/></QRow></>;
+            return(<div><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/></QRow></div>);
           })()}
         </>}
         <QRow label="尺寸（mm）">
@@ -640,7 +640,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
         <div ref={ref} style={{background:"#fff",padding:"28px 32px",fontFamily:woFF,width:480,boxSizing:"border-box",fontSize:15,lineHeight:1.9,color:"#000",textAlign:"left"}}>
 
           <div style={{marginBottom:20,fontSize:14}}>
-            {dateStr}　BW0800　（{clientName||custName||""}）
+            {dateStr}　享浴　（{clientName||custName||""}）
           </div>
 
           {validItems.map((item,idx)=>{
@@ -882,7 +882,7 @@ function QuotationSystem({onCreateOrder}){
       </QSection>
       <div>
         <div style={{fontWeight:700,fontSize:13,marginBottom:8,color:"#374151"}}>門型明細</div>
-        {items.map((item,idx)=>(<DoorItemForm key={item.id} item={item} idx={idx} floor={floor} elev={elev} fpFee={fpFee} master={master} region={region} onUpdate={updated=>updateItem(idx,updated)} onRemove={()=>removeItem(idx)} canRemove={items.length>1}/>))}
+        {items.map((item,idx)=>(<DoorItemForm key={item.id} item={item} idx={idx} floor={floor} elev={elev} fpFee={fpFee} master={master} region={region} onUpdate={updated=>updateItem(idx,updated)} onRemove={()=>removeItem(idx)} canRemove={items.length>1} quoteMode={true}/>))}
         <button onClick={addItem} style={{width:"100%",padding:"10px",borderRadius:8,border:"2px dashed #ddd",background:"#fff",cursor:"pointer",fontSize:13,fontWeight:700,color:"#888"}}>＋ 新增門型</button>
       </div>
       <QSection title="報價結果" accent>
