@@ -19,6 +19,7 @@ const sb={
 };
 
 const ff = "'Noto Sans TC','PingFang TC',sans-serif";
+function onEnterNext(e){if(e.key==="Enter"){e.preventDefault();const form=e.target.closest("form,[data-form]")||document;const inputs=Array.from(form.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea"));const idx=inputs.indexOf(e.target);if(idx>-1&&idx<inputs.length-1)inputs[idx+1].focus();}}
 const HOME_USERS=["老闆","行政A","行政B","余青陽","賴彥銘","郭師傅"];
 const HOME_USER_COLORS={"老闆":"#c0392b","行政A":"#2980b9","行政B":"#8e44ad","余青陽":"#16a085","賴彥銘":"#d35400","郭師傅":"#27ae60"};
 const HOME_PRIORITY={"高":"#e74c3c","中":"#f39c12","低":"#27ae60"};
@@ -427,7 +428,7 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   if(!cfg.isArc){extraH=Math.ceil(Math.max(0,hR-cfg.stdH)/100)*surH;}
   let prod=base+extraW+extraH;
   if(fourDoorFull)prod+=500;if(foldLock)prod+=1000;
-  if(arcShorten&&doorType==="圓弧型"&&material==="3mmPS501")prod+=500;
+  if((arcShorten||doorType==="圓弧型"&&["3mmPS板","3mmPS501"].includes(matKey)&&hR<1880)&&doorType==="圓弧型")prod+=500;
   // 三門PS板玻璃軌道（強制）
   const isThreeDoorPS=(doorType==="一字三門"||doorType==="一字二門")&&["5mmPS板","3mmPS板"].includes(matKey);
   let glassTrackFee=0;
@@ -465,17 +466,19 @@ function calcFrameless({doorType,wMm,hMm,film,filmType,blackFrame,flatTube,floor
 }
 
 function QRow({label,children}){return(<div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}><span style={{minWidth:90,fontSize:12,color:"#555",flexShrink:0}}>{label}</span><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>{children}</div></div>);}
-function QInput(props){const {style,...rest}=props;return(<input {...rest} style={{border:"1px solid #ddd",borderRadius:6,padding:"5px 10px",fontSize:13,outline:"none",...style}}/>);}
+function QInput(props){const {style,onKeyDown,...rest}=props;return(<input {...rest} onKeyDown={onKeyDown||onEnterNext} style={{border:"1px solid #ddd",borderRadius:6,padding:"5px 10px",fontSize:13,outline:"none",...style}}/>);}
 function QToggle({value,onChange,options,wrap}){return(<div style={{display:"flex",flexWrap:wrap?"wrap":"nowrap",gap:5}}>{options.map(o=><button key={o} onClick={()=>onChange(o)} style={{padding:"4px 11px",borderRadius:6,fontSize:12,cursor:"pointer",border:value===o?"2px solid #1a1a1a":"1px solid #ddd",background:value===o?"#1a1a1a":"#fff",color:value===o?"#fff":"#333",fontWeight:value===o?600:400}}>{o}</button>)}</div>);}
 function QCheck({checked,onChange,label}){return(<label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:12}}><input type="checkbox" checked={checked} onChange={e=>onChange(e.target.checked)} style={{width:15,height:15}}/>{label}</label>);}
 function QTag({children,color}){return(<span style={{background:color+"22",color,border:`1px solid ${color}`,borderRadius:4,padding:"2px 7px",fontSize:11,fontWeight:600}}>{children}</span>);}
 function QSection({title,children,accent}){return(<div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}><div style={{background:accent?"#1a1a1a":"#f0efe9",color:accent?"#fff":"#1a1a1a",padding:"9px 15px",fontWeight:700,fontSize:13,letterSpacing:1}}>{title}</div><div style={{padding:"11px 15px",display:"flex",flexDirection:"column",gap:9}}>{children}</div></div>);}
 function QLineItem({label,value}){return(<div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:"#444"}}>{label}</span><span style={{fontWeight:500}}>${fmtMoney(value)}</span></div>);}
 
-function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:"",looseParts:false,glassTrack:false};}
+function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:"",looseParts:false,glassTrack:false,itemShipFee:500};}
 
 function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove,canRemove,quoteMode}){
   const s=(k,v)=>onUpdate({...item,[k]:v});
+  const isThreeDoorPSAuto=(item.dt==="一字三門"||item.dt==="一字二門")&&["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501"].includes(item.mat)&&roundTo100(item.wMm)>1700;
+  useEffect(()=>{if(isThreeDoorPSAuto&&!item.glassTrack)s("glassTrack",true);},[isThreeDoorPSAuto]);
   const changeDt=t=>{const ms=FRAMED_MATS[t]||FRAMED_MATS.default;const defaultDir=t==="一字四門"?"雙固":t==="一字二門"||t==="一字三門"?"左開":t==="摺疊二門"?"左固":t==="L型二門"?"對開":t==="固定片"?"左固":"";const defaultFourFull=t==="一字四門"?false:false;onUpdate({...item,dt:t,mat:ms[0],col:t==="圓弧型"?FRAMED_COLS.圓弧型[0]:(quoteMode?"白/牙色":FRAMED_COLS.default[0]),direction:defaultDir,fourFull:defaultFourFull});};
   const changeCat=v=>{onUpdate({...item,cat:v,dt:v==="有框"?"一字二門":v==="無框"?"連動門":"",mat:v==="有框"?"5mmPS101":"",col:v==="有框"?(quoteMode?"白/牙色":"白色"):"",addonType:"毛巾桿"});};
   const mats=FRAMED_MATS[item.dt]||FRAMED_MATS.default;
@@ -575,7 +578,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           {(()=>{
             const dirOpts=item.dt==="一字四門"?["雙固","左固","右固","四片活動"]:item.dt==="一字二門"||item.dt==="一字三門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="L型二門"?["對開"]:item.dt==="固定片"?["左固","右固"]:null;
             if(!dirOpts)return null;
-            const isThreeDoorPS2=(item.dt==="一字三門"||item.dt==="一字二門")&&["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501"].includes(item.mat); const autoGlassTrack=isThreeDoorPS2&&roundTo100(item.wMm)>1700; if(autoGlassTrack&&!item.glassTrack)s("glassTrack",true);
+            const isThreeDoorPS2=(item.dt==="一字三門"||item.dt==="一字二門")&&["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501"].includes(item.mat); const autoGlassTrack=isThreeDoorPS2&&roundTo100(item.wMm)>1700;
             return(<div><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/><QCheck checked={item.glassTrack||false} onChange={v=>s("glassTrack",v)} label="玻軌"/></QRow></div>);
           })()}
         </>}
@@ -585,6 +588,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           {item.dt==="圓弧型"&&item.mat==="5mm強化清玻"?<span style={{fontSize:11,color:"#888"}}>H1880（固定）</span>:<QInput type="number" value={item.hMm} onChange={e=>s("hMm",Number(e.target.value))} min={100} max={3000} style={{width:90}}/>}
         </QRow>
         {!isFixedPlate&&<QRow label="安裝類型"><QToggle value={item.instType||"純安裝"} onChange={v=>s("instType",v)} options={["純安裝","含拆舊","純寄送"]}/></QRow>}
+        {!isFixedPlate&&!quoteMode&&item.instType==="純寄送"&&<QRow label="運費"><QInput type="number" value={item.itemShipFee!=null?item.itemShipFee:500} onChange={e=>s("itemShipFee",Number(e.target.value))} style={{width:90}}/><span style={{fontSize:11,color:"#888"}}>元</span></QRow>}
         {isFixedPlate&&<QRow label="角度"><QToggle value={item.fpAngle||"90度"} onChange={v=>s("fpAngle",v)} options={["45度","90度","180度"]}/></QRow>}
         <QRow label="微調金額">
           <button onClick={()=>s("adjust",(item.adjust||0)-100)} style={{width:28,height:28,borderRadius:6,border:"1px solid #ddd",background:"#fff",cursor:"pointer",fontSize:16,fontWeight:700}}>−</button>
@@ -603,7 +607,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           <QRow label="黑色五金"><QCheck checked={item.blackF} onChange={v=>s("blackF",v)} label="+$2,000"/></QRow>
         </>}
         </>}
-        {result&&!result.error&&!result.blocked&&(<div style={{background:"#f8f7f3",borderRadius:8,padding:"8px 12px",fontSize:12,display:"flex",justifyContent:"space-between"}}><span style={{color:"#666"}}>{isFixedPlate?`固定片（${item.fpAngle||"90度"}）`:`產品 $${fmtMoney(result.productPrice)}　安裝 $${fmtMoney(result.installFee||0)}`}</span><span style={{fontWeight:700,color:"#1a1a1a"}}>${fmtMoney(adjustedTotal)}</span></div>)}
+        {result&&!result.error&&!result.blocked&&(<div style={{background:"#f8f7f3",borderRadius:8,padding:"8px 12px",fontSize:12,display:"flex",justifyContent:"space-between"}}><span style={{color:"#666"}}>{isFixedPlate?`固定片（${item.fpAngle||"90度"}）`:item.instType==="純寄送"?`產品 $${fmtMoney(result.productPrice)}　運費 $${fmtMoney(item.itemShipFee!=null?item.itemShipFee:500)}`:`產品 $${fmtMoney(result.productPrice)}　安裝 $${fmtMoney(result.installFee||0)}${(result.shipSurcharge||0)>0?`　運費 $${fmtMoney(result.shipSurcharge)}`:""}` }</span><span style={{fontWeight:700,color:"#1a1a1a"}}>${fmtMoney(adjustedTotal)}</span></div>)}
         {result?.error&&<div style={{color:"#c0392b",fontSize:12,fontWeight:600}}>⚠️ {result.error}</div>}
         {result?.blocked&&<div style={{color:"#c0392b",fontSize:12,fontWeight:600}}>🚫 南部不販售無框產品</div>}
       </div>
@@ -708,6 +712,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
 
 function QuotationSystem({onCreateOrder}){
   const [items,setItems]=useState([defItem()]);
+  const [shopMode,setShopMode]=useState("官網");
   const [master,setMaster]=useState("余青陽");const [region,setRegion]=useState("台北");
   const [floor,setFloor]=useState(1);const [elev,setElev]=useState(false);
   const [fpFee,setFpFee]=useState(0);
@@ -800,7 +805,18 @@ function QuotationSystem({onCreateOrder}){
     return calcFrameless({doorType:item.dt,wMm:item.wMm,hMm:item.hMm,film:item.film,filmType:item.filmType,blackFrame:item.blackF,flatTube:item.flatT,floor,hasElevator:elev,fixplateFee:fpFee});
   });
   const shippingFee=master==="進南貨運"?500+jinnExtra:0;
-  const grandTotal=results.reduce((s,r,i)=>s+(r&&!r.error&&!r.blocked&&!r.pending?(r.total+(items[i].cat==="加購品"||items[i].dt==="固定片"?0:items[i].adjust||0)):0),0)+shippingFee;
+  function applyShopMode(r,item){
+    if(!r||r.error||r.blocked||r.pending)return 0;
+    const base=r.total+(item.cat==="加購品"||item.dt==="固定片"?0:item.adjust||0);
+    if(shopMode==="官網")return base;
+    const mat=item.mat||"";
+    const isPS=mat.includes("PS");
+    const isGlass=!isPS&&item.cat!=="加購品";
+    if(isPS)return base+400;
+    if(isGlass)return Math.round(base+(r.productPrice||0)*0.05);
+    return base;
+  }
+  const grandTotal=results.reduce((s,r,i)=>s+applyShopMode(r,items[i]),0)+shippingFee;
   function buildLines(){
     const lines=["享浴淋浴拉門 報價單",""];
     if(addr)lines.push(`施工地址：${addr}`);
@@ -912,7 +928,7 @@ function QuotationSystem({onCreateOrder}){
         {items.map((item,idx)=>(<DoorItemForm key={item.id} item={item} idx={idx} floor={floor} elev={elev} fpFee={fpFee} master={master} region={region} onUpdate={updated=>updateItem(idx,updated)} onRemove={()=>removeItem(idx)} canRemove={items.length>1} quoteMode={true}/>))}
         <button onClick={addItem} style={{width:"100%",padding:"10px",borderRadius:8,border:"2px dashed #ddd",background:"#fff",cursor:"pointer",fontSize:13,fontWeight:700,color:"#888"}}>＋ 新增門型</button>
       </div>
-      <QSection title="報價結果" accent>
+      <QSection title={<div style={{display:"flex",alignItems:"center",gap:12}}>報價結果<div style={{display:"flex",gap:4}}>{["官網","蝦皮"].map(s=><button key={s} onClick={()=>setShopMode(s)} style={{padding:"3px 12px",borderRadius:6,fontSize:12,cursor:"pointer",border:"none",background:shopMode===s?(s==="官網"?"#1d4ed8":"#f97316"):"#e2e8f0",color:shopMode===s?"#fff":"#64748b",fontWeight:shopMode===s?700:500}}>{s}</button>)}</div></div>} accent>
         {grandTotal>0?(<>
           <div style={{fontSize:13,color:"#555"}}>報價日期：{qDate}　有效期限：{vDate}</div>
           {items.map((item,i)=>{
@@ -933,11 +949,13 @@ function QuotationSystem({onCreateOrder}){
               {r.floorFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>樓層費（{floor}樓）</span><span style={{fontWeight:600}}>${fmtMoney(r.floorFee)}</span></div>}
               {r.thresholdPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>鋁門檻（{(item.thrMm/10)} cm）</span><span style={{fontWeight:600}}>${fmtMoney(r.thresholdPrice)}</span></div>}
               {(r.glassTrackFee||0)>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#e67e22",marginBottom:3}}><span>玻璃軌道</span><span style={{fontWeight:600}}>${fmtMoney(r.glassTrackFee)}</span></div>}
+              {item.dt==="圓弧型"&&["3mmPS101","3mmPS503","3mmPS501"].includes(item.mat)&&item.hMm<1880&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#e67e22",marginBottom:3}}><span>訂製費</span><span style={{fontWeight:600}}>+$500</span></div>}
               {r.towelPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>{item.towelType||"毛巾桿"}</span><span style={{fontWeight:600}}>${fmtMoney(r.towelPrice)}</span></div>}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:15,color:"#111",fontWeight:700,marginTop:6,paddingTop:6,borderTop:"1px solid #ddd"}}><span>小計</span><span>${fmtMoney(r.total+(item.cat==="加購品"?0:item.adjust||0))}</span></div>
             </div>);
           })}
           {shippingFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#4f46e5",fontWeight:600,marginBottom:8}}><span>🚚 進南貨運運費{jinnExtra>0?`（含偏遠 $${fmtMoney(jinnExtra)}）`:""}</span><span>${fmtMoney(shippingFee)}</span></div>}
+          {shopMode==="蝦皮"&&<div style={{fontSize:11,color:"#e67e22",textAlign:"right",marginBottom:4}}>蝦皮價格（玻璃×1.05，PS+$400）</div>}
           <div style={{paddingTop:10,borderTop:"2px solid #1a1a1a",display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontWeight:700,fontSize:18,color:"#111"}}>總計</span><span style={{fontWeight:800,fontSize:26,color:"#111"}}>${fmtMoney(grandTotal)}</span></div>
           <div style={{display:"flex",gap:8,marginTop:4}}>
             <button onClick={handleCopy} style={{flex:1,padding:"11px",borderRadius:8,background:copied?"#059669":"#1a1a1a",color:"#fff",border:"none",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:qff}}>{copied?"✅ 已複製！":"📋 複製報價單"}</button>
@@ -1287,7 +1305,7 @@ function CollectModal({order,balance,onClose,onSave}){
         <div style={{fontSize:13,color:"#374151",marginBottom:4}}>客戶：{order.customer}</div>
         {balance!==null&&<div style={{fontSize:13,color:"#6B7280",marginBottom:16}}>應收尾款：<span style={{fontWeight:700,color:"#111"}}>${balance.toLocaleString()}</span></div>}
         <div style={{display:"grid",gap:12}}>
-          <div><label style={lbl}>收款金額</label><input type="number" value={amount} onChange={e=>setAmount(Number(e.target.value))} style={inp}/></div>
+          <div><label style={lbl}>收款金額</label><input type="number" value={amount} onChange={e=>setAmount(Number(e.target.value))} onKeyDown={onEnterNext} style={inp}/></div>
           <div><label style={lbl}>收款方式</label>
             <div style={{display:"flex",gap:6,marginTop:4}}>
               {["師傅代收（月結）","現金","匯款"].map(m=>(
@@ -1295,7 +1313,7 @@ function CollectModal({order,balance,onClose,onSave}){
               ))}
             </div>
           </div>
-          <div><label style={lbl}>收款日期</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={inp}/></div>
+          <div><label style={lbl}>收款日期</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
         </div>
         <div style={{display:"flex",gap:10,marginTop:20}}>
           <button onClick={onClose} style={{flex:1,padding:11,borderRadius:10,border:"1.5px solid #E5E7EB",background:"#fff",cursor:"pointer",fontFamily:ff}}>取消</button>
@@ -1317,7 +1335,7 @@ function WageCalc({master,onClose}){
         <button onClick={onClose} style={{border:"none",background:"none",fontSize:22,cursor:"pointer",color:"#9CA3AF"}}>✕</button>
       </div>
       <div style={{padding:"14px 20px 20px",display:"grid",gap:12}}>
-        <div><label style={lbl}>地區</label><select value={area} onChange={e=>setArea(e.target.value)} style={sel}>{Object.keys(master.areas).map(a=><option key={a}>{a}</option>)}</select></div>
+        <div><label style={lbl}>地區</label><select value={area} onChange={e=>setArea(e.target.value)} onKeyDown={onEnterNext} style={sel}>{Object.keys(master.areas).map(a=><option key={a}>{a}</option>)}</select></div>
         <div><label style={lbl}>工作類型</label><div style={{display:"flex",gap:8}}>{["安裝","拆裝","純配送"].map(t=><button key={t} onClick={()=>setJt(t)} style={{flex:1,padding:"8px 0",borderRadius:8,border:"2px solid",borderColor:jt===t?master.color:"#E5E7EB",background:jt===t?master.light:"#fff",color:jt===t?master.dark:"#374151",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:ff}}>{t}</button>)}</div></div>
         <div><label style={lbl}>樓層：{fl}F {fl>=4&&!elev?`（+$${(fl-3)*300}）`:""}</label><input type="range" min={1} max={10} value={fl} onChange={e=>setFl(+e.target.value)} style={{width:"100%",accentColor:master.color}}/></div>
         <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
@@ -1382,9 +1400,9 @@ function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete})
           <div><label style={lbl}>地圖連結</label><div style={{display:"flex",gap:6}}><input value={form.mapUrl||`https://maps.google.com/?q=${encodeURIComponent(form.address||"")}`} onChange={e=>set("mapUrl",e.target.value)} style={{...inp,fontSize:11}} placeholder="自動產生"/>{form.address&&<a href={form.mapUrl||`https://maps.google.com/?q=${encodeURIComponent(form.address)}`} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{padding:"6px 10px",borderRadius:6,background:"#e0f2fe",color:"#0369a1",fontSize:11,fontWeight:600,textDecoration:"none",whiteSpace:"nowrap"}}>開啟</a>}</div></div>
           <div><label style={lbl}>產品描述</label><input value={form.product} onChange={e=>set("product",e.target.value)} style={inp} placeholder="一字三門 清玻 銀色 W150×H190"/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-            <div><label style={lbl}>日期</label><input type="date" value={form.date} onChange={e=>set("date",e.target.value)} style={inp}/></div>
-            <div><label style={lbl}>預約時間</label><input type="time" value={form.appointTime||""} onChange={e=>set("appointTime",e.target.value)} style={inp}/></div>
-            <div><label style={lbl}>狀態</label><select value={form.status} onChange={e=>set("status",e.target.value)} style={sel}>{Object.keys(STATUS_CFG).map(s=><option key={s}>{s}</option>)}</select></div>
+            <div><label style={lbl}>日期</label><input type="date" value={form.date} onChange={e=>set("date",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
+            <div><label style={lbl}>預約時間</label><input type="time" value={form.appointTime||""} onChange={e=>set("appointTime",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
+            <div><label style={lbl}>狀態</label><select value={form.status} onChange={e=>set("status",e.target.value)} onKeyDown={onEnterNext} style={sel}>{Object.keys(STATUS_CFG).map(s=><option key={s}>{s}</option>)}</select></div>
           </div>
           <div>
             <label style={lbl}>指派師傅</label>
@@ -1393,8 +1411,8 @@ function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete})
             </div>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            <div><label style={lbl}>地區</label><select value={form.area} onChange={e=>set("area",e.target.value)} style={sel}>{areas.map(a=><option key={a}>{a}</option>)}</select></div>
-            <div><label style={lbl}>工作類型</label><select value={form.jobType} onChange={e=>set("jobType",e.target.value)} style={sel}>{["安裝","拆裝","純配送"].map(t=><option key={t}>{t}</option>)}</select></div>
+            <div><label style={lbl}>地區</label><select value={form.area} onChange={e=>set("area",e.target.value)} onKeyDown={onEnterNext} style={sel}>{areas.map(a=><option key={a}>{a}</option>)}</select></div>
+            <div><label style={lbl}>工作類型</label><select value={form.jobType} onChange={e=>set("jobType",e.target.value)} onKeyDown={onEnterNext} style={sel}>{["安裝","拆裝","純配送"].map(t=><option key={t}>{t}</option>)}</select></div>
           </div>
           <div><label style={lbl}>樓層：{form.floor}F {form.floor>=4?`（樓層費 +$${(form.floor-3)*300}）`:""}</label><input type="range" min={1} max={10} value={form.floor} onChange={e=>set("floor",Number(e.target.value))} style={{width:"100%",accentColor:master.color}}/></div>
           <div>
@@ -1408,7 +1426,7 @@ function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete})
               {(form.priceAdjust||0)!==0&&<button onClick={()=>set("priceAdjust",0)} style={{fontSize:11,color:"#9CA3AF",background:"none",border:"none",cursor:"pointer"}}>重置</button>}
             </div>
           </div>
-          <div><label style={lbl}>備註</label><textarea value={form.note} onChange={e=>set("note",e.target.value)} style={{...inp,height:54,resize:"vertical"}}/></div>
+          <div><label style={lbl}>備註</label><textarea value={form.note} onChange={e=>set("note",e.target.value)} onKeyDown={onEnterNext} style={{...inp,height:54,resize:"vertical"}}/></div>
         </div>
         {wage&&(<div style={{marginTop:12,padding:14,borderRadius:12,background:master.light,border:"1.5px solid "+master.color+"40"}}>
           <div style={{fontSize:11,fontWeight:700,color:master.dark,marginBottom:8}}>師傅工資預覽</div>
@@ -1480,6 +1498,15 @@ function DeliveryModal({order,onClose,onShipped}){
     taxMode:"無",
     items:buildItems(order),
     extraRows:[],
+    paymentNote:(()=>{
+      if(order.payStatus==="已付清")return`已付清 $${(order.totalAmount||0).toLocaleString()}`;
+      if(order.payStatus==="已收定金"){
+        const deposit=order.depositAmount||0;
+        const balance=(order.totalAmount||0)-deposit;
+        return`已收定金 $${deposit.toLocaleString()}\n尾款 $${balance.toLocaleString()}`;
+      }
+      return "";
+    })(),
   });
   const set=(k,v)=>setForm(f=>({...f,[k]:v}));
   const setItem=(i,k,v)=>setForm(f=>({...f,items:f.items.map((it,idx)=>idx===i?{...it,[k]:v}:it)}));
@@ -1550,14 +1577,15 @@ function DeliveryModal({order,onClose,onShipped}){
       <div style={{flex:1,overflowY:"auto",padding:"14px 20px"}}>
         {/* 表單欄位 */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
-          <div><label style={lbl}>客戶名稱</label><input value={form.custName} onChange={e=>set("custName",e.target.value)} style={inp}/></div>
+          <div><label style={lbl}>客戶名稱</label><input value={form.custName} onChange={e=>set("custName",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
           <div><label style={lbl}>統一編號</label><input value={form.taxId} onChange={e=>set("taxId",e.target.value)} style={inp} placeholder="（可空白）"/></div>
-          <div><label style={lbl}>收件人</label><input value={form.receiver} onChange={e=>set("receiver",e.target.value)} style={inp}/></div>
-          <div><label style={lbl}>收件人電話</label><input value={form.receiverPhone} onChange={e=>set("receiverPhone",e.target.value)} style={inp}/></div>
-          <div style={{gridColumn:"1/-1"}}><label style={lbl}>送貨地址</label><input value={form.address} onChange={e=>set("address",e.target.value)} style={inp}/></div>
-          <div><label style={lbl}>送貨方式</label><input value={form.shipMethod} onChange={e=>set("shipMethod",e.target.value)} style={inp}/></div>
-          <div><label style={lbl}>出貨日期</label><input type="date" value={form.shipDate} onChange={e=>set("shipDate",e.target.value)} style={inp}/></div>
+          <div><label style={lbl}>收件人</label><input value={form.receiver} onChange={e=>set("receiver",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
+          <div><label style={lbl}>收件人電話</label><input value={form.receiverPhone} onChange={e=>set("receiverPhone",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
+          <div style={{gridColumn:"1/-1"}}><label style={lbl}>送貨地址</label><input value={form.address} onChange={e=>set("address",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
+          <div><label style={lbl}>送貨方式</label><input value={form.shipMethod} onChange={e=>set("shipMethod",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
+          <div><label style={lbl}>出貨日期</label><input type="date" value={form.shipDate} onChange={e=>set("shipDate",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
           <div style={{gridColumn:"1/-1"}}><label style={lbl}>發票號碼</label><input value={form.invoiceNo} onChange={e=>set("invoiceNo",e.target.value)} style={inp} placeholder="（手填）"/></div>
+          <div style={{gridColumn:"1/-1"}}><label style={lbl}>收款備註</label><textarea value={form.paymentNote||""} onChange={e=>set("paymentNote",e.target.value)} style={{...inp,height:54,resize:"vertical",fontFamily:ff}} rows={2}/></div>
         </div>
 
         {/* 品項 */}
@@ -1668,6 +1696,8 @@ function DeliveryModal({order,onClose,onShipped}){
               </tbody>
             </table>
 
+            {/* 收款備註 */}
+            {form.paymentNote&&<div style={{marginTop:16,padding:"10px 14px",background:"#f8f7f3",borderRadius:8,fontSize:13,whiteSpace:"pre-line"}}>{form.paymentNote}</div>}
             {/* 簽收欄 */}
             <div style={{display:"flex",gap:24,marginTop:20}}>
               <div style={{flex:1,borderTop:"1.5px solid #333",paddingTop:8,fontSize:12,textAlign:"center",color:"#555"}}>客戶簽收</div>
@@ -1839,6 +1869,7 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
                     <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
                       {p.orderDate&&<span style={{fontSize:11,color:"#94A3B8",fontFamily:"monospace"}}>{p.orderDate}</span>}
                       <span style={{fontWeight:800,fontSize:15}}>{p.cust||p.customer||"（未填姓名）"}</span>
+                      {p.shopMode==="蝦皮"&&<span style={{fontSize:11,color:"#e67e22",background:"#fef3c7",padding:"2px 6px",borderRadius:4,fontWeight:700}}>蝦皮</span>}
                       {p.phone&&<span style={{fontSize:12,color:"#6B7280"}}>{p.phone}</span>}
                       <span style={{fontSize:11,fontWeight:700,color:p.shipMethod==="寄進南"?"#6366f1":"#059669",background:p.shipMethod==="寄進南"?"#EEF2FF":"#D1FAE5",padding:"2px 8px",borderRadius:10}}>{p.shipMethod==="寄進南"?"🚚 寄送":"🔧 安裝"}</span>
                     </div>
@@ -1882,6 +1913,7 @@ function PendingOrderForm({order,onSave,onClose}){
   const isEdit=!!order;
   const todayStr2=new Date().toISOString().slice(0,10);
   const initForm=order?{
+    shopMode:order.shopMode||"官網",
     cust:order.cust||order.customer||"",
     phone:order.phone||"",
     addr:order.addr||order.address||"",
@@ -1926,11 +1958,14 @@ function PendingOrderForm({order,onSave,onClose}){
           </div>
           <div><label style={lbl}>施工地址</label><input value={form.addr||""} onChange={e=>set("addr",e.target.value)} style={{...inp}} placeholder="台北市信義區..."/></div>
           <div>
-            <div style={{fontWeight:700,fontSize:13,color:"#374151",marginBottom:8}}>門型品項</div>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+              <div style={{fontWeight:700,fontSize:13,color:"#374151"}}>門型品項</div>
+              <div style={{display:"flex",gap:4}}>{["官網","蝦皮"].map(s=><button key={s} onClick={()=>set("shopMode",s)} style={{padding:"3px 12px",borderRadius:6,fontSize:12,cursor:"pointer",border:"none",background:form.shopMode===s?(s==="官網"?"#1d4ed8":"#f97316"):"#e2e8f0",color:form.shopMode===s?"#fff":"#64748b",fontWeight:form.shopMode===s?700:500}}>{s}</button>)}</div>
+            </div>
             {(form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[{...defItem(),id:Math.floor(Date.now()/1000)}]).map((item,idx)=>(
               <DoorItemForm key={item.id||idx} item={item} idx={idx}
                 floor={1} elev={false} fpFee={0}
-                master={form.master||"余青陽"} region={form.region||""}
+                master={form.master||"余青陽"} region={form.region||MASTER_AREAS[form.master||"余青陽"]?.[0]||""}
                 onUpdate={updated=>{
                   const items=form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[{...defItem(),id:Math.floor(Date.now()/1000)}];
                   const newItems=items.map((it,i)=>i===idx?updated:it);
@@ -1942,9 +1977,10 @@ function PendingOrderForm({order,onSave,onClose}){
                     return`${it.dt} W${Math.round(it.wMm/10)}×H${Math.round(it.hMm/10)}`;
                   }).join("、");
                   set("product",desc);
+                  function applyShop(base,it){if(form.shopMode!=="蝦皮")return base;const mat=it.mat||"";const isPS=mat.includes("PS");const isGlass=!isPS&&it.cat!=="加購品";if(isPS)return base+400;if(isGlass){const r2=it.cat==="有框"?calcFramed({doorType:it.dt,material:it.mat,color:it.col,wMm:it.wMm,hMm:it.hMm,wMm2:it.wMm2,hasThreshold:it.hasThr,thresholdMm:it.thrMm,towelBar:0,fourDoorFull:it.fourFull,foldLock:it.foldLock,arcShorten:it.arcShort,floor:1,hasElevator:false,installType:it.instType||"純安裝",fixplateFee:0,region:form.region||MASTER_AREAS[form.master||"余青陽"]?.[0]||"",master:form.master||"余青陽"}):null;return base+Math.round((r2?r2.productPrice:0)*0.05);}return base;}
                   const newTotal=newItems.reduce((s,it)=>{
                     if(it.cat==="加購品"){const t=it.addonType||"毛巾桿";if(t==="毛巾桿")return s+(it.towel||1)*200;if(t==="鋁門檻")return s+Math.round(it.thrMm||0);if(t==="自填")return s+(it.addonPrice||0);return s;}
-                    if(it.cat==="有框"){const r=calcFramed({doorType:it.dt,material:it.mat,color:it.col,wMm:it.wMm,hMm:it.hMm,wMm2:it.wMm2,hasThreshold:it.hasThr,thresholdMm:it.thrMm,towelBar:it.towelType==="內外把手"?2:it.towelType&&it.towelType!=="無"?1:0,fourDoorFull:it.fourFull,foldLock:it.foldLock,arcShorten:it.arcShort,floor:1,hasElevator:false,installType:it.instType||"純安裝",fixplateFee:0,region:form.region||"",master:form.master||"余青陽"});return s+(r?r.total+(it.adjust||0):0);}
+                    if(it.cat==="有框"){const r=calcFramed({doorType:it.dt,material:it.mat,color:it.col,wMm:it.wMm,hMm:it.hMm,wMm2:it.wMm2,hasThreshold:it.hasThr,thresholdMm:it.thrMm,towelBar:it.towelType==="內外把手"?2:it.towelType&&it.towelType!=="無"?1:0,fourDoorFull:it.fourFull,foldLock:it.foldLock,arcShorten:it.arcShort,floor:1,hasElevator:false,installType:it.instType||"純安裝",fixplateFee:0,region:form.region||MASTER_AREAS[form.master||"余青陽"]?.[0]||"",master:form.master||"余青陽"});const shipAdj=it.instType==="純寄送"?((it.itemShipFee!=null?it.itemShipFee:500)-(r?r.shipSurcharge||0:0)):0;const base=r?r.total+(it.adjust||0)+shipAdj:0;return s+applyShop(base,it);}
                     if(it.cat==="無框"){const r=calcFrameless({doorType:it.dt,wMm:it.wMm,hMm:it.hMm,film:it.film,filmType:it.filmType,blackFrame:it.blackF,flatTube:it.flatT,floor:1,hasElevator:false,fixplateFee:0});return s+(r&&!r.error?r.total+(it.adjust||0):0);}
                     return s;
                   },0);
@@ -1965,16 +2001,16 @@ function PendingOrderForm({order,onSave,onClose}){
             }} style={{width:"100%",padding:"8px",borderRadius:8,border:"2px dashed #ddd",background:"#fff",cursor:"pointer",fontSize:12,fontWeight:700,color:"#888",marginBottom:4}}>＋ 新增門型</button>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-            <div><label style={lbl}>師傅</label><select value={form.master||"余青陽"} onChange={e=>{const m=e.target.value;set("master",m);const autoShip=m==="余青陽"?"寄松成":m==="賴彥銘"?"載":m==="郭師傅"?(form.region==="台南"?"寄台南站址":"寄高雄站址"):m==="進南貨運"?"寄進南":m==="自取"?"自取":"寄松成";set("shipMethod",autoShip);}} style={sel}>{["余青陽","賴彥銘","郭師傅","進南貨運","自取"].map(m=><option key={m}>{m}</option>)}</select></div>
-            <div><label style={lbl}>W扣尺寸</label><select value={form.wDeduct||0} onChange={e=>set("wDeduct",Number(e.target.value))} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
-            <div><label style={lbl}>H扣尺寸</label><select value={form.hDeduct||0} onChange={e=>set("hDeduct",Number(e.target.value))} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
+            <div><label style={lbl}>師傅</label><select value={form.master||"余青陽"} onChange={e=>{const m=e.target.value;set("master",m);const autoShip=m==="余青陽"?"寄松成":m==="賴彥銘"?"載":m==="郭師傅"?(form.region==="台南"?"寄台南站址":"寄高雄站址"):m==="進南貨運"?"寄進南":m==="自取"?"自取":"寄松成";set("shipMethod",autoShip);}} onKeyDown={onEnterNext} style={sel}>{["余青陽","賴彥銘","郭師傅","進南貨運","自取"].map(m=><option key={m}>{m}</option>)}</select></div>
+            <div><label style={lbl}>W扣尺寸</label><select value={form.wDeduct||0} onChange={e=>set("wDeduct",Number(e.target.value))} onKeyDown={onEnterNext} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
+            <div><label style={lbl}>H扣尺寸</label><select value={form.hDeduct||0} onChange={e=>set("hDeduct",Number(e.target.value))} onKeyDown={onEnterNext} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
           </div>
           <div><label style={lbl}>客單名稱</label><input value={form.clientName!==undefined?form.clientName:clientName} onChange={e=>set("clientName",e.target.value)} style={inp} placeholder={clientName}/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div><label style={lbl}>預計出貨日</label><input value={form.shipDate||""} onChange={e=>set("shipDate",e.target.value)} style={inp} placeholder="5/6"/></div>
-            <div><label style={lbl}>出貨方式</label><select value={form.shipMethod||"寄松成"} onChange={e=>set("shipMethod",e.target.value)} style={sel}>{["寄松成","寄進南","寄台南站址","寄高雄站址","載","自取","代安裝","其他"].map(o=><option key={o}>{o}</option>)}</select></div>
+            <div><label style={lbl}>出貨方式</label><select value={form.shipMethod||"寄松成"} onChange={e=>set("shipMethod",e.target.value)} onKeyDown={onEnterNext} style={sel}>{["寄松成","寄進南","寄台南站址","寄高雄站址","載","自取","代安裝","其他"].map(o=><option key={o}>{o}</option>)}</select></div>
           </div>
-          <div><label style={lbl}>備註</label><textarea value={form.note||""} onChange={e=>set("note",e.target.value)} style={{...inp,height:60,resize:"vertical"}} placeholder="特殊注意事項..."/></div>
+          <div><label style={lbl}>備註</label><textarea value={form.note||""} onChange={e=>set("note",e.target.value)} onKeyDown={onEnterNext} style={{...inp,height:60,resize:"vertical"}} placeholder="特殊注意事項..."/></div>
           <div style={{borderTop:"1px solid #E5E7EB",paddingTop:12}}>
             <div style={{fontWeight:700,fontSize:13,color:"#374151",marginBottom:10}}>💰 收款</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10}}>
@@ -1990,12 +2026,12 @@ function PendingOrderForm({order,onSave,onClose}){
             {form.payStatus==="已收定金"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
               <div><label style={lbl}>定金金額</label><input type="number" value={form.depositAmount||""} onChange={e=>set("depositAmount",Number(e.target.value))} style={inp} placeholder="0"/></div>
               <div><label style={lbl}>剩餘尾款</label><span style={{fontSize:13,fontWeight:600,color:"#374151",display:"block",marginTop:8}}>${((form.totalAmount||0)-(form.depositAmount||0)).toLocaleString()}</span></div>
-              <div><label style={lbl}>付款方式</label><select value={form.depositMethod||"匯款"} onChange={e=>set("depositMethod",e.target.value)} style={sel}>{["匯款","現金","刷卡"].map(m=><option key={m}>{m}</option>)}</select></div>
-              <div><label style={lbl}>收款日期</label><input type="date" value={form.depositDate||""} onChange={e=>set("depositDate",e.target.value)} style={inp}/></div>
+              <div><label style={lbl}>付款方式</label><select value={form.depositMethod||"匯款"} onChange={e=>set("depositMethod",e.target.value)} onKeyDown={onEnterNext} style={sel}>{["匯款","現金","刷卡"].map(m=><option key={m}>{m}</option>)}</select></div>
+              <div><label style={lbl}>收款日期</label><input type="date" value={form.depositDate||""} onChange={e=>set("depositDate",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
             </div>}
             {form.payStatus==="已付清"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-              <div><label style={lbl}>付款方式</label><select value={form.finalMethod||"匯款"} onChange={e=>set("finalMethod",e.target.value)} style={sel}>{["匯款","現金","刷卡"].map(m=><option key={m}>{m}</option>)}</select></div>
-              <div><label style={lbl}>收款日期</label><input type="date" value={form.finalDate||""} onChange={e=>set("finalDate",e.target.value)} style={inp}/></div>
+              <div><label style={lbl}>付款方式</label><select value={form.finalMethod||"匯款"} onChange={e=>set("finalMethod",e.target.value)} onKeyDown={onEnterNext} style={sel}>{["匯款","現金","刷卡"].map(m=><option key={m}>{m}</option>)}</select></div>
+              <div><label style={lbl}>收款日期</label><input type="date" value={form.finalDate||""} onChange={e=>set("finalDate",e.target.value)} onKeyDown={onEnterNext} style={inp}/></div>
             </div>}
           </div>
           <div>
