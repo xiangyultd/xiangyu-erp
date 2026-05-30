@@ -270,12 +270,13 @@ function lookupFP(table,color,wCm,hCm){
   const row=rows[hK];if(!row)return null;
   return row[wK];
 }
+const FP_3PS={"白/牙色":{140:[1600,1600,1800,1800,2000,2000,2200,2400,2600,2800],150:[1600,1600,1800,1800,2000,2000,2200,2400,2600,2800],160:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],170:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],180:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],190:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],200:[2400,2400,2600,2600,2800,2800,3000,3200,3400,3600],210:[2600,2600,2800,2800,3000,3000,3200,3600,3800,4000]},"銀色":{140:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],150:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],160:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],170:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],180:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],190:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],200:[2600,2600,2800,2800,3000,3000,3200,3400,3600,3800],210:[2800,2800,3000,3000,3200,3200,3400,3800,4000,4200]},"黑色":{140:[2600,2600,2800,2800,3000,3000,3200,3400,3600,3800],150:[2600,2600,2800,2800,3000,3000,3200,3400,3600,3800],160:[2800,2800,3000,3000,3200,3200,3400,3600,3800,4000],170:[2800,2800,3000,3000,3200,3200,3400,3600,3800,4000],180:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],190:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],200:[3400,3400,3600,3600,3800,3800,4000,4200,4400,4600],210:[3600,3600,3800,3800,4000,4000,4200,4600,4800,5000]}};
+const FP_5GLASS={"白/牙色":{140:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],150:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],160:[2200,2200,2400,2400,2600,2600,2800,3200,3400,3600],170:[2200,2200,2400,2400,2600,2600,2800,3200,3400,3600],180:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],190:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],200:[2800,2800,3000,3000,3200,3200,3400,3800,4000,4200],210:[3200,3200,3400,3400,3600,3600,3800,4200,4400,4600]},"銀色":{140:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],150:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],160:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],170:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],180:[2600,2600,2800,2800,3000,3000,3200,3600,3800,4000],190:[2600,2600,2800,2800,3000,3000,3200,3600,3800,4000],200:[3000,3000,3200,3200,3400,3400,3600,4000,4200,4400],210:[3400,3400,3600,3600,3800,3800,4000,4400,4600,4800]},"黑色":{140:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],150:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],160:[3200,3200,3400,3400,3600,3600,3800,4200,4400,4600],170:[3200,3200,3400,3400,3600,3600,3800,4200,4400,4600],180:[3400,3400,3600,3600,3800,3800,4000,4400,4600,4800],190:[3400,3400,3600,3600,3800,3800,4000,4400,4600,4800],200:[3800,3800,4000,4000,4200,4200,4400,4800,5000,5200],210:[4200,4200,4400,4400,4600,4600,4800,5200,5400,5600]}};
+const FP_5SF={"白/牙色":{140:[2800,2800,3080,3080,3360,3360,3640,3920,4200,4480],150:[2800,2800,3080,3080,3360,3360,3640,3920,4200,4480],160:[3080,3080,3360,3360,3640,3640,3920,4480,4760,5040],170:[3080,3080,3360,3360,3640,3640,3920,4480,4760,5040],180:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],190:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],200:[3920,3920,4200,4200,4480,4480,4760,5320,5600,5880],210:[4480,4480,4760,4760,5040,5040,5320,5880,6160,6440]},"銀色":{140:[3080,3080,3360,3360,3640,3640,3920,4200,4480,4760],150:[3080,3080,3360,3360,3640,3640,3920,4200,4480,4760],160:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],170:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],180:[3640,3640,3920,3920,4200,4200,4480,5040,5320,5600],190:[3640,3640,3920,3920,4200,4200,4480,5040,5320,5600],200:[4200,4200,4480,4480,4760,4760,5040,5600,5880,6160],210:[4760,4760,5040,5040,5320,5320,5600,6160,6440,6720]},"黑色":{140:[4200,4200,4480,4480,4760,4760,5040,5320,5600,5880],150:[4200,4200,4480,4480,4760,4760,5040,5320,5600,5880],160:[4480,4480,4760,4760,5040,5040,5320,5880,6160,6440],170:[4480,4480,4760,4760,5040,5040,5320,5880,6160,6440],180:[4760,4760,5040,5040,5320,5320,5600,6160,6440,6720],190:[4760,4760,5040,5040,5320,5320,5600,6160,6440,6720],200:[5320,5320,5600,5600,5880,5880,6160,6720,7000,7280],210:[5880,5880,6160,6160,6440,6440,6720,7280,7560,7840]}};
 function calcFixedPlate({material,color,wMm,hMm}){
-  // 3mm材質及5mm強化銀霞玻貼清膜固定片價格後補，暫時回傳null
-  if(["3mmPS101","3mmPS503","3mmPS501","5mm強化銀霞玻貼清膜"].includes(material))return null;
   const wCm=wMm/10,hCm=hMm/10;
-  const matKey=["5mmPS101","5mmPS503","5mmPS501"].includes(material)?"PS":["5mm強化清玻貼清膜","5mm強化清玻貼砂膜"].includes(material)?"GLASS":"SILVERFROST";
-  const table=matKey==="PS"?FP_PS:matKey==="GLASS"?FP_GLASS:FP_SILVERFROST;
+  const matKey=["5mmPS101","5mmPS503","5mmPS501"].includes(material)?"5PS":["3mmPS101","3mmPS503","3mmPS501"].includes(material)?"3PS":["5mm強化清玻貼清膜","5mm強化清玻貼砂膜"].includes(material)?"5GLASS":"5SF";
+  const table=matKey==="5PS"?FP_PS:matKey==="3PS"?FP_3PS:matKey==="5GLASS"?FP_5GLASS:FP_5SF;
   return lookupFP(table,color,wCm,hCm);
 }
 
@@ -416,7 +417,7 @@ const FRAMED_COLS={圓弧型:["白色"],default:["白色","牙色","銀色","黑
 function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,thresholdMm,towelBar,fourDoorFull,foldLock,arcShorten,floor,hasElevator,installType,fixplateFee,region,master}){
   const cfg=FRAMED_BASE[doorType];if(!cfg)return null;
   const wR=roundTo100(wMm),hR=roundTo100(hMm),wR2=wMm2?roundTo100(wMm2):null;
-  const matKey=["5mmPS101","5mmPS503","5mmPS501"].includes(material)?"5mmPS板":["3mmPS101","3mmPS503","3mmPS501"].includes(material)?"3mmPS板":material==="5mm強化銀霞玻貼清膜"?"5mm強化銀霞玻貼清膜":material;
+  const matKey=["5mmPS101","5mmPS503","5mmPS501"].includes(material)?"5mmPS板":["3mmPS101","3mmPS503","3mmPS501"].includes(material)?(doorType==="圓弧型"?material:"3mmPS板"):material==="5mm強化銀霞玻貼清膜"?"5mm強化銀霞玻貼清膜":material;
   const colKey=(["白色","牙色","白/牙色"].includes(color))&&doorType!=="圓弧型"?"白/牙色":color;
   const base=cfg.prices[matKey]?.[colKey]??0;
   const surW=cfg.surW[matKey]??0,surH=cfg.surH[matKey]??0;
@@ -427,6 +428,11 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   let prod=base+extraW+extraH;
   if(fourDoorFull)prod+=500;if(foldLock)prod+=1000;
   if(arcShorten&&doorType==="圓弧型"&&material==="3mmPS501")prod+=500;
+  // 三門PS板玻璃軌道（強制）
+  const isThreeDoorPS=(doorType==="一字三門"||doorType==="一字二門")&&["5mmPS板","3mmPS板"].includes(matKey);
+  let glassTrackFee=0;
+  if(isThreeDoorPS){if(wR>1900)glassTrackFee=800;else if(wR>1700)glassTrackFee=500;}
+  prod+=glassTrackFee;
   const thrPrice=hasThreshold&&thresholdMm>0?Math.round(thresholdMm):0;
   const towelPrice=(towelBar||0)*200;
   const feeKey=installType==="含拆舊"?"拆裝":installType==="純寄送"?null:"安裝";
@@ -437,7 +443,7 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   const thrInstall=hasThreshold?200:0;
   const fixFee=master==="余青陽"&&doorType==="L型二門"?200:0;
   const fp=fixplateFee||0;
-  return{productPrice:prod,thresholdPrice:thrPrice,towelPrice,installFee,installFeeBase,shipSurcharge,floorFee,thresholdInstallFee:thrInstall,fixFee,fixplateFee:fp,total:prod+thrPrice+towelPrice+installFee+floorFee+thrInstall+fixFee+fp,wR,hR,wR2,extraW,extraH};
+  return{productPrice:prod,thresholdPrice:thrPrice,towelPrice,installFee,installFeeBase,shipSurcharge,floorFee,thresholdInstallFee:thrInstall,fixFee,fixplateFee:fp,glassTrackFee,total:prod+thrPrice+towelPrice+installFee+floorFee+thrInstall+fixFee+fp,wR,hR,wR2,extraW,extraH};
 }
 
 function calcFrameless({doorType,wMm,hMm,film,filmType,blackFrame,flatTube,floor,hasElevator,fixplateFee}){
@@ -466,7 +472,7 @@ function QTag({children,color}){return(<span style={{background:color+"22",color
 function QSection({title,children,accent}){return(<div style={{background:"#fff",borderRadius:10,overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.08)"}}><div style={{background:accent?"#1a1a1a":"#f0efe9",color:accent?"#fff":"#1a1a1a",padding:"9px 15px",fontWeight:700,fontSize:13,letterSpacing:1}}>{title}</div><div style={{padding:"11px 15px",display:"flex",flexDirection:"column",gap:9}}>{children}</div></div>);}
 function QLineItem({label,value}){return(<div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span style={{color:"#444"}}>{label}</span><span style={{fontWeight:500}}>${fmtMoney(value)}</span></div>);}
 
-function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:"",looseParts:false};}
+function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二門",mat:"5mmPS101",col:"白色",wMm:1500,hMm:1900,wMm2:900,hasThr:false,thrMm:0,towel:0,fourFull:false,foldLock:false,arcShort:false,film:false,filmType:"清玻",blackF:false,flatT:false,instType:"純安裝",hasFixedPlate:false,adjust:0,fpAngle:"90度",direction:"",looseParts:false,glassTrack:false};}
 
 function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove,canRemove,quoteMode}){
   const s=(k,v)=>onUpdate({...item,[k]:v});
@@ -569,7 +575,8 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
           {(()=>{
             const dirOpts=item.dt==="一字四門"?["雙固","左固","右固","四片活動"]:item.dt==="一字二門"||item.dt==="一字三門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="L型二門"?["對開"]:item.dt==="固定片"?["左固","右固"]:null;
             if(!dirOpts)return null;
-            return(<div><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/></QRow></div>);
+            const isThreeDoorPS2=(item.dt==="一字三門"||item.dt==="一字二門")&&["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501"].includes(item.mat); const autoGlassTrack=isThreeDoorPS2&&roundTo100(item.wMm)>1700; if(autoGlassTrack&&!item.glassTrack)s("glassTrack",true);
+            return(<div><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/><QCheck checked={item.glassTrack||false} onChange={v=>s("glassTrack",v)} label="玻軌"/></QRow></div>);
           })()}
         </>}
         <QRow label="尺寸（mm）">
@@ -666,7 +673,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
             const isFixedPlate=item.dt==="固定片";
             const thrMmVal=item.thrMm||0;
             const sizeStr=(item.dt==="L型二門"||item.dt==="圓弧型")?`W${wR}*W${w2R||wR}*H${hR}`:`W${wR}*H${hR}`;
-            const looseParts=item.looseParts?"散裝":""; const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,looseParts,towelText].filter(Boolean).join("  ");
+            const looseParts=item.looseParts?"散裝":""; const glassTrackText=item.glassTrack?"改玻璃軌道":""; const sizeLine=isFixedPlate?`W${wR}*H${hR}`:[sizeStr,dir,looseParts,glassTrackText,towelText].filter(Boolean).join("  ");
             const deductLine=[wDeductVal>0?`丈量扣${wDeductVal}`:"",hDeductVal>0?`高扣${hDeductVal}`:""].filter(Boolean).join("　");
 
             return(
@@ -832,6 +839,7 @@ function QuotationSystem({onCreateOrder}){
       } else {
         lines.push(`${item.dt}／${item.cat==="有框"?item.mat+"／"+item.col:"8mm強化清玻"}`);
         lines.push(`尺寸：W${item.wMm/10} × H${item.hMm/10} cm`);
+        if((r.glassTrackFee||0)>0)lines.push(`改玻璃軌道`);
         lines.push(`產品費用：$${fmtMoney(r.productPrice)}`);
         const adjAmt=item.adjust||0;
         const instBase2=(r.installFeeBase||r.installFee||0)+(r.shipSurcharge||0)+adjAmt;
@@ -924,6 +932,7 @@ function QuotationSystem({onCreateOrder}){
               {(r.shipFee||0)>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>運費</span><span style={{fontWeight:600}}>${fmtMoney(r.shipFee)}</span></div>}
               {r.floorFee>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>樓層費（{floor}樓）</span><span style={{fontWeight:600}}>${fmtMoney(r.floorFee)}</span></div>}
               {r.thresholdPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>鋁門檻（{(item.thrMm/10)} cm）</span><span style={{fontWeight:600}}>${fmtMoney(r.thresholdPrice)}</span></div>}
+              {(r.glassTrackFee||0)>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#e67e22",marginBottom:3}}><span>玻璃軌道</span><span style={{fontWeight:600}}>${fmtMoney(r.glassTrackFee)}</span></div>}
               {r.towelPrice>0&&<div style={{display:"flex",justifyContent:"space-between",fontSize:14,color:"#333",marginBottom:3}}><span>{item.towelType||"毛巾桿"}</span><span style={{fontWeight:600}}>${fmtMoney(r.towelPrice)}</span></div>}
               <div style={{display:"flex",justifyContent:"space-between",fontSize:15,color:"#111",fontWeight:700,marginTop:6,paddingTop:6,borderTop:"1px solid #ddd"}}><span>小計</span><span>${fmtMoney(r.total+(item.cat==="加購品"?0:item.adjust||0))}</span></div>
             </div>);
