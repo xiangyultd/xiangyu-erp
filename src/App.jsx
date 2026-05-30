@@ -478,7 +478,7 @@ function defItem(){return{id:Date.now()+Math.random(),cat:"有框",dt:"一字二
 function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove,canRemove,quoteMode}){
   const s=(k,v)=>onUpdate({...item,[k]:v});
   const isThreeDoorPSAuto=(item.dt==="一字三門"||item.dt==="一字二門")&&["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501"].includes(item.mat)&&roundTo100(item.wMm)>1700;
-  useEffect(()=>{if(isThreeDoorPSAuto&&!item.glassTrack)s("glassTrack",true);},[isThreeDoorPSAuto]);
+  useEffect(()=>{if(isThreeDoorPSAuto&&!item.glassTrack){s("glassTrack",true);}},[item.dt,item.mat,item.wMm]);
   const changeDt=t=>{const ms=FRAMED_MATS[t]||FRAMED_MATS.default;const defaultDir=t==="一字四門"?"雙固":t==="一字二門"||t==="一字三門"?"左開":t==="摺疊二門"?"左固":t==="L型二門"?"對開":t==="固定片"?"左固":"";const defaultFourFull=t==="一字四門"?false:false;onUpdate({...item,dt:t,mat:ms[0],col:t==="圓弧型"?FRAMED_COLS.圓弧型[0]:(quoteMode?"白/牙色":FRAMED_COLS.default[0]),direction:defaultDir,fourFull:defaultFourFull});};
   const changeCat=v=>{onUpdate({...item,cat:v,dt:v==="有框"?"一字二門":v==="無框"?"連動門":"",mat:v==="有框"?"5mmPS101":"",col:v==="有框"?(quoteMode?"白/牙色":"白色"):"",addonType:"毛巾桿"});};
   const mats=FRAMED_MATS[item.dt]||FRAMED_MATS.default;
