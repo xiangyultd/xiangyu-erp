@@ -578,7 +578,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
             const dirOpts=item.dt==="一字四門"?["雙固","左固","右固","四片活動"]:item.dt==="一字二門"||item.dt==="一字三門"?["左開","右開","左固","右固"]:item.dt==="摺疊二門"?["左固","右固"]:item.dt==="L型二門"?["對開"]:item.dt==="固定片"?["左固","右固"]:null;
             if(!dirOpts)return null;
             const isThreeDoorPS2=(item.dt==="一字三門"||item.dt==="一字二門")&&["5mmPS101","5mmPS503","5mmPS501","3mmPS101","3mmPS503","3mmPS501"].includes(item.mat); const autoGlassTrack=isThreeDoorPS2&&roundTo100(item.wMm)>1700;
-            return(<div><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{s("direction",v);if(item.dt==="一字四門")s("fourFull",v==="四片活動");}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/><QCheck checked={item.glassTrack||isThreeDoorPSAuto} onChange={v=>s("glassTrack",v)} label="玻軌"/></QRow></div>);
+            return(<div><QRow label="開向"><QToggle value={item.direction||dirOpts[0]} onChange={v=>{if(item.dt==="一字四門"){onUpdate({...item,direction:v,fourFull:v==="四片活動"});}else{s("direction",v);}}} options={dirOpts} wrap/></QRow><QRow label=""><QCheck checked={item.looseParts||false} onChange={v=>s("looseParts",v)} label="散裝"/><QCheck checked={item.glassTrack||isThreeDoorPSAuto} onChange={v=>s("glassTrack",v)} label="玻軌"/></QRow></div>);
           })()}
         </>}
         <QRow label="尺寸（mm）">
