@@ -45,6 +45,7 @@ function HomeMsgBubble({m,currentUser,onPin,onDelete}){
       <div style={{display:"flex",flexDirection:"column",gap:3,maxWidth:"72%"}}>
         {!isSelf&&<div style={{fontSize:11,fontWeight:700,color}}>{m.user}</div>}
         <div style={{background:isSelf?"#1d4ed8":"#1e2740",border:`1px solid ${isSelf?"#2563eb":"#2e3a5c"}`,borderRadius:10,padding:"8px 12px",fontSize:14,lineHeight:1.55,color:"#e2e8f0",whiteSpace:"pre-wrap",wordBreak:"break-word",textAlign:"left"}}>
+          {m.image&&<img src={m.image} alt="圖片" style={{maxWidth:"100%",maxHeight:300,borderRadius:8,display:"block",marginBottom:m.text?6:0}} onClick={()=>window.open(m.image,"_blank")}/>}
           {m.text}{m.pinned&&<span style={{fontSize:12}}> 📌</span>}
         </div>
         <div style={{fontSize:10,color:"#475569",display:"flex",alignItems:"center",gap:6,...(isSelf?{justifyContent:"flex-end"}:{})}}>
@@ -94,6 +95,35 @@ function HomeResultRow({label,value,highlight}){
 }
 
 function HomeSecretTab(){
+  const [secretTab,setSecretTab]=useState("calc");
+  const [doorNotes,setDoorNotes]=useState({});
+  const [savedIds,setSavedIds]=useState({});
+
+  useEffect(()=>{
+    fetch(SUPABASE_URL+"/rest/v1/door_notes",{headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY}})
+      .then(r=>r.json()).then(rows=>{
+        if(rows&&rows.length){const m={};rows.forEach(r=>{if(r.id&&r.data)m[r.id]=r.data.note||"";});setDoorNotes(m);}
+      }).catch(()=>{});
+  },[]);
+
+  function saveDoorNote(id,note){
+    setDoorNotes(p=>({...p,[id]:note}));
+    fetch(SUPABASE_URL+"/rest/v1/door_notes",{method:"POST",headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id,data:{note}})});
+    setSavedIds(p=>({...p,[id]:true}));
+    setTimeout(()=>setSavedIds(p=>({...p,[id]:false})),2000);
+  }
+
+  const DOOR_SPECS=[
+    {id:"123door",name:"一字二門 / 三門",cat:"有框",specs:["W154×H190以內","超寬每10cm PS+200/玻璃+400","W170↑ PS須改玻璃軌道+500","W190↑ 玻璃軌道+800"]},
+    {id:"4door",name:"一字四門 / L型對開",cat:"有框",specs:["W214×H190以內","L型：W94×W94×H190以內","L型安裝工資+200（所有師傅）"]},
+    {id:"fold2",name:"摺疊二門",cat:"有框",specs:["W94×H190以內","加鎖+1000"]},
+    {id:"arc",name:"圓弧型",cat:"有框",specs:["W94×W94×H188以內","僅白色","PS板改矮訂製費+500","安裝含+500運費（含賴彥銘）"]},
+    {id:"fixplate",name:"固定片",cat:"有框",specs:["有其他門型時安裝+200（師傅工資）","單獨使用安裝費另計"]},
+    {id:"sliding",name:"連動門",cat:"無框",specs:["W200以內","超寬/高每10cm+1000","黑框+2000","人造石門檻$4.5/cm"]},
+    {id:"lateral",name:"橫拉門",cat:"無框",specs:["W200以內","超寬/高每10cm+1000","黑框+2000"]},
+    {id:"swing",name:"開啟門",cat:"無框",specs:["W200以內","扁管/圓管+1000","黑色五金+2000（扁管再+1000）","圓管無黑色"]},
+  ];
+
   const calcs=[
     {icon:"🚪",title:"三門",color:"#3b82f6",comp:()=>{const[w,setW]=useState("");const r=w?((parseFloat(w)-12)/3*2-6).toFixed(1):null;return(<div><HomeNumInput label="總寬 W" value={w} onChange={setW} hint="(總W－12cm)÷3×2－6 = 出入尺寸"/>{r&&<HomeResultRow label="出入尺寸" value={`${r} cm`} highlight/>}</div>);}},
     {icon:"🚪",title:"二門",color:"#8b5cf6",comp:()=>{const[w,setW]=useState("");const r=w?((parseFloat(w)-10)/2-4).toFixed(1):null;return(<div><HomeNumInput label="總寬 W" value={w} onChange={setW} hint="(總W－10cm)÷2－4 = 出入尺寸"/>{r&&<HomeResultRow label="出入尺寸" value={`${r} cm`} highlight/>}</div>);}},
@@ -106,15 +136,49 @@ function HomeSecretTab(){
   ];
   return(
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      <div style={{display:"flex",alignItems:"center",gap:14,background:"linear-gradient(135deg,#1e3a5f,#1a1f2e)",border:"1px solid #2563eb44",borderLeft:"4px solid #3b82f6",borderRadius:12,padding:"16px 20px"}}>
+      <div style={{display:"flex",gap:4,marginBottom:4}}>
+        {[["calc","📐 計算秘笈"],["notes","📋 門型規格"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setSecretTab(k)} style={{padding:"6px 16px",borderRadius:8,border:"none",background:secretTab===k?"#1d4ed8":"#1e2740",color:secretTab===k?"#fff":"#64748b",fontSize:13,fontWeight:secretTab===k?700:400,cursor:"pointer",fontFamily:"inherit"}}>{l}</button>
+        ))}
+      </div>
+      {secretTab==="notes"&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {["有框","無框"].map(cat=>(
+          <div key={cat}>
+            <div style={{fontSize:11,color:"#64748b",letterSpacing:"0.1em",marginBottom:8,marginTop:4}}>{cat}</div>
+            {DOOR_SPECS.filter(d=>d.cat===cat).map(door=>(
+              <div key={door.id} style={{background:"#0f1e3a",border:"1px solid #1e3a5f",borderRadius:12,padding:"14px 16px",marginBottom:8}}>
+                <div style={{fontWeight:700,fontSize:14,marginBottom:8}}>{door.name}</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:10}}>
+                  {door.specs.map((s,i)=>(
+                    <span key={i} style={{background:"#1e3a5f",border:"1px solid #2d5a8e",borderRadius:6,padding:"2px 8px",fontSize:11,color:"#94a3b8"}}>{s}</span>
+                  ))}
+                </div>
+                <div style={{fontSize:11,color:"#64748b",marginBottom:6}}>施工注意事項</div>
+                <textarea
+                  value={doorNotes[door.id]||""}
+                  onChange={e=>setDoorNotes(p=>({...p,[door.id]:e.target.value}))}
+                  placeholder="填寫注意事項、特殊狀況說明…"
+                  rows={2}
+                  style={{width:"100%",background:"#111827",border:"1px solid #2d5a8e",borderRadius:8,color:"#e2e8f0",padding:"8px 10px",fontSize:12,resize:"vertical",fontFamily:"inherit",boxSizing:"border-box"}}
+                />
+                <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
+                  <button onClick={()=>saveDoorNote(door.id,doorNotes[door.id]||"")} style={{padding:"4px 14px",borderRadius:6,border:"none",background:"#1d4ed8",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>儲存</button>
+                  {savedIds[door.id]&&<span style={{fontSize:11,color:"#4ade80"}}>✅ 已儲存</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>}
+      {secretTab==="calc"&&<div style={{display:"flex",alignItems:"center",gap:14,background:"linear-gradient(135deg,#1e3a5f,#1a1f2e)",border:"1px solid #2563eb44",borderLeft:"4px solid #3b82f6",borderRadius:12,padding:"16px 20px"}}>
         <span style={{fontSize:32}}>📐</span>
         <div><div style={{fontWeight:700,fontSize:17}}>拉門出入空間計算秘笈</div><div style={{fontSize:12,color:"#64748b",marginTop:3}}>選擇門型 → 輸入總寬 → 即時結果</div></div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
+      </div>}
+      {secretTab==="calc"&&<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))",gap:10}}>
         {calcs.map(({icon,title,color,comp:Comp})=>(
           <HomeCalcCard key={title} icon={icon} title={title} color={color}><Comp/></HomeCalcCard>
         ))}
-      </div>
+      </div>}
     </div>
   );
 }
@@ -129,10 +193,20 @@ function HomePage(){
   const [todoPriority,setTodoPriority]=useState("中");
   const [homeTab,setHomeTab]=useState("board");
   const [filter,setFilter]=useState("全部");
+  const [msgSearch,setMsgSearch]=useState("");
   const msgEndRef=useRef(null);
 
   useEffect(()=>{
-    sb.getAll("messages").then(rows=>{if(rows&&rows.length)setMessages(rows.map(r=>r.data).sort((a,b)=>new Date(a.time)-new Date(b.time)));else setMessages(HOME_SEED_MSGS);});
+    const cutoff=new Date(Date.now()-14*24*60*60*1000).toISOString();
+    sb.getAll("messages").then(rows=>{
+      if(rows&&rows.length){
+        const all=rows.map(r=>r.data).sort((a,b)=>new Date(a.time)-new Date(b.time));
+        const expired=all.filter(m=>m.time<cutoff);
+        const valid=all.filter(m=>m.time>=cutoff);
+        expired.forEach(m=>sb.delete("messages",m.id));
+        setMessages(valid.length?valid:HOME_SEED_MSGS);
+      } else setMessages(HOME_SEED_MSGS);
+    });
     sb.getAll("todos").then(rows=>{if(rows&&rows.length)setTodos(rows.map(r=>r.data));else setTodos(HOME_SEED_TODOS);});
   },[]);
 
@@ -145,8 +219,8 @@ function HomePage(){
   function toggleTodo(id){setTodos(p=>p.map(t=>{if(t.id!==id)return t;const u={...t,done:!t.done};sb.upsert("todos",{id:u.id,data:u});return u;}));}
   function deleteTodo(id){setTodos(p=>p.filter(t=>t.id!==id));sb.delete("todos",id);}
 
-  const pinnedMsgs=messages.filter(m=>m.pinned);
-  const normalMsgs=messages.filter(m=>!m.pinned);
+  const pinnedMsgs=messages.filter(m=>m.pinned&&(!msgSearch||m.text?.includes(msgSearch)||m.user?.includes(msgSearch)));
+  const normalMsgs=messages.filter(m=>!m.pinned&&(!msgSearch||m.text?.includes(msgSearch)||m.user?.includes(msgSearch)));
   const filteredTodos=filter==="全部"?todos:filter==="未完成"?todos.filter(t=>!t.done):todos.filter(t=>t.assignee===filter);
   const pendingCount=todos.filter(t=>!t.done).length;
 
@@ -179,7 +253,11 @@ function HomePage(){
               </div>
             )}
             <div style={{background:dark3,border:`1px solid ${border}`,borderRadius:10,padding:14,display:"flex",flexDirection:"column",gap:10}}>
-              <div style={{fontSize:11,color:muted,letterSpacing:1}}>💬 留言板</div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{fontSize:11,color:muted,letterSpacing:1}}>💬 留言板</div>
+                <input value={msgSearch} onChange={e=>setMsgSearch(e.target.value)} placeholder="搜尋關鍵字..." style={{flex:1,background:"#111827",border:`1px solid ${border2}`,borderRadius:6,color:text,padding:"4px 10px",fontSize:12,fontFamily:ff,outline:"none"}}/>
+                {msgSearch&&<button onClick={()=>setMsgSearch("")} style={{background:"none",border:"none",color:muted,cursor:"pointer",fontSize:12}}>✕</button>}
+              </div>
               <div style={{maxHeight:380,overflowY:"auto",display:"flex",flexDirection:"column",gap:10,paddingRight:4}}>
                 {normalMsgs.map(m=><div key={m.id} className="hm-bubble"><HomeMsgBubble m={m} currentUser={currentUser} onPin={pinMsg} onDelete={deleteMsg}/></div>)}
                 <div ref={msgEndRef}/>
@@ -187,6 +265,20 @@ function HomePage(){
               <div style={{display:"flex",alignItems:"flex-end",gap:10,borderTop:`1px solid ${border}`,paddingTop:12}}>
                 <div style={{width:32,height:32,borderRadius:"50%",background:HOME_USER_COLORS[currentUser],display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,color:"#fff",flexShrink:0}}>{currentUser[0]}</div>
                 <textarea value={msgInput} onChange={e=>setMsgInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();}}} placeholder="輸入訊息… Enter 送出 / Shift+Enter 換行" rows={2} style={{flex:1,background:"#111827",border:`1px solid ${border2}`,borderRadius:8,color:text,padding:"8px 12px",fontSize:13,resize:"none",fontFamily:ff,lineHeight:1.5}}/>
+                <label style={{display:"flex",alignItems:"center",justifyContent:"center",width:36,height:36,background:"#1e2740",border:`1px solid ${border2}`,borderRadius:8,cursor:"pointer",flexShrink:0}}>
+                  <span style={{fontSize:18}}>📷</span>
+                  <input type="file" accept="image/*" style={{display:"none"}} onChange={e=>{
+                    const file=e.target.files[0];if(!file)return;
+                    const reader=new FileReader();
+                    reader.onload=ev=>{
+                      const img=ev.target.result;
+                      const m={id:Math.floor(Date.now()/1000),user:currentUser,text:"",image:img,time:new Date().toISOString(),pinned:false};
+                      setMessages(p=>[...p,m]);sb.upsert("messages",{id:m.id,data:m});
+                    };
+                    reader.readAsDataURL(file);
+                    e.target.value="";
+                  }}/>
+                </label>
                 <button onClick={sendMsg} style={{background:"#1d4ed8",border:"none",borderRadius:8,color:"#fff",padding:"8px 16px",fontSize:13,cursor:"pointer",fontFamily:ff,fontWeight:600,height:36,flexShrink:0}}>送出</button>
               </div>
             </div>
@@ -273,7 +365,7 @@ function lookupFP(table,color,wCm,hCm){
 }
 const FP_3PS={"白/牙色":{140:[1600,1600,1800,1800,2000,2000,2200,2400,2600,2800],150:[1600,1600,1800,1800,2000,2000,2200,2400,2600,2800],160:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],170:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],180:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],190:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],200:[2400,2400,2600,2600,2800,2800,3000,3200,3400,3600],210:[2600,2600,2800,2800,3000,3000,3200,3600,3800,4000]},"銀色":{140:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],150:[1800,1800,2000,2000,2200,2200,2400,2600,2800,3000],160:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],170:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],180:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],190:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],200:[2600,2600,2800,2800,3000,3000,3200,3400,3600,3800],210:[2800,2800,3000,3000,3200,3200,3400,3800,4000,4200]},"黑色":{140:[2600,2600,2800,2800,3000,3000,3200,3400,3600,3800],150:[2600,2600,2800,2800,3000,3000,3200,3400,3600,3800],160:[2800,2800,3000,3000,3200,3200,3400,3600,3800,4000],170:[2800,2800,3000,3000,3200,3200,3400,3600,3800,4000],180:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],190:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],200:[3400,3400,3600,3600,3800,3800,4000,4200,4400,4600],210:[3600,3600,3800,3800,4000,4000,4200,4600,4800,5000]}};
 const FP_5GLASS={"白/牙色":{140:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],150:[2000,2000,2200,2200,2400,2400,2600,2800,3000,3200],160:[2200,2200,2400,2400,2600,2600,2800,3200,3400,3600],170:[2200,2200,2400,2400,2600,2600,2800,3200,3400,3600],180:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],190:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],200:[2800,2800,3000,3000,3200,3200,3400,3800,4000,4200],210:[3200,3200,3400,3400,3600,3600,3800,4200,4400,4600]},"銀色":{140:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],150:[2200,2200,2400,2400,2600,2600,2800,3000,3200,3400],160:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],170:[2400,2400,2600,2600,2800,2800,3000,3400,3600,3800],180:[2600,2600,2800,2800,3000,3000,3200,3600,3800,4000],190:[2600,2600,2800,2800,3000,3000,3200,3600,3800,4000],200:[3000,3000,3200,3200,3400,3400,3600,4000,4200,4400],210:[3400,3400,3600,3600,3800,3800,4000,4400,4600,4800]},"黑色":{140:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],150:[3000,3000,3200,3200,3400,3400,3600,3800,4000,4200],160:[3200,3200,3400,3400,3600,3600,3800,4200,4400,4600],170:[3200,3200,3400,3400,3600,3600,3800,4200,4400,4600],180:[3400,3400,3600,3600,3800,3800,4000,4400,4600,4800],190:[3400,3400,3600,3600,3800,3800,4000,4400,4600,4800],200:[3800,3800,4000,4000,4200,4200,4400,4800,5000,5200],210:[4200,4200,4400,4400,4600,4600,4800,5200,5400,5600]}};
-const FP_5SF={"白/牙色":{140:[2800,2800,3080,3080,3360,3360,3640,3920,4200,4480],150:[2800,2800,3080,3080,3360,3360,3640,3920,4200,4480],160:[3080,3080,3360,3360,3640,3640,3920,4480,4760,5040],170:[3080,3080,3360,3360,3640,3640,3920,4480,4760,5040],180:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],190:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],200:[3920,3920,4200,4200,4480,4480,4760,5320,5600,5880],210:[4480,4480,4760,4760,5040,5040,5320,5880,6160,6440]},"銀色":{140:[3080,3080,3360,3360,3640,3640,3920,4200,4480,4760],150:[3080,3080,3360,3360,3640,3640,3920,4200,4480,4760],160:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],170:[3360,3360,3640,3640,3920,3920,4200,4760,5040,5320],180:[3640,3640,3920,3920,4200,4200,4480,5040,5320,5600],190:[3640,3640,3920,3920,4200,4200,4480,5040,5320,5600],200:[4200,4200,4480,4480,4760,4760,5040,5600,5880,6160],210:[4760,4760,5040,5040,5320,5320,5600,6160,6440,6720]},"黑色":{140:[4200,4200,4480,4480,4760,4760,5040,5320,5600,5880],150:[4200,4200,4480,4480,4760,4760,5040,5320,5600,5880],160:[4480,4480,4760,4760,5040,5040,5320,5880,6160,6440],170:[4480,4480,4760,4760,5040,5040,5320,5880,6160,6440],180:[4760,4760,5040,5040,5320,5320,5600,6160,6440,6720],190:[4760,4760,5040,5040,5320,5320,5600,6160,6440,6720],200:[5320,5320,5600,5600,5880,5880,6160,6720,7000,7280],210:[5880,5880,6160,6160,6440,6440,6720,7280,7560,7840]}};
+const FP_5SF={"白/牙色":{140:[2800,2800,3200,3200,3400,3400,3800,4000,4200,4600],150:[2800,2800,3200,3200,3400,3400,3800,4000,4200,4600],160:[3200,3200,3400,3400,3800,3800,4000,4600,4800,5200],170:[3200,3200,3400,3400,3800,3800,4000,4600,4800,5200],180:[3400,3400,3800,3800,4000,4000,4200,4800,5200,5400],190:[3400,3400,3800,3800,4000,4000,4200,4800,5200,5400],200:[4000,4000,4200,4200,4600,4600,4800,5400,5600,6000],210:[4600,4600,4800,4800,5200,5200,5400,6000,6200,6600]},"銀色":{140:[3200,3200,3400,3400,3800,3800,4000,4200,4600,4800],150:[3200,3200,3400,3400,3800,3800,4000,4200,4600,4800],160:[3400,3400,3800,3800,4000,4000,4200,4800,5200,5400],170:[3400,3400,3800,3800,4000,4000,4200,4800,5200,5400],180:[3800,3800,4000,4000,4200,4200,4600,5200,5400,5600],190:[3800,3800,4000,4000,4200,4200,4600,5200,5400,5600],200:[4200,4200,4600,4600,4800,4800,5200,5600,6000,6200],210:[4800,4800,5200,5200,5400,5400,5600,6200,6600,6800]},"黑色":{140:[4200,4200,4600,4600,4800,4800,5200,5400,5600,6000],150:[4200,4200,4600,4600,4800,4800,5200,5400,5600,6000],160:[4600,4600,4800,4800,5200,5200,5400,6000,6200,6600],170:[4600,4600,4800,4800,5200,5200,5400,6000,6200,6600],180:[4800,4800,5200,5200,5400,5400,5600,6200,6600,6800],190:[4800,4800,5200,5200,5400,5400,5600,6200,6600,6800],200:[5400,5400,5600,5600,6000,6000,6200,6800,7000,7400],210:[6000,6000,6200,6200,6600,6600,6800,7400,7600,8000]}};
 function calcFixedPlate({material,color,wMm,hMm}){
   const wCm=wMm/10,hCm=hMm/10;
   const matKey=["5mmPS101","5mmPS503","5mmPS501"].includes(material)?"5PS":["3mmPS101","3mmPS503","3mmPS501"].includes(material)?"3PS":["5mm強化清玻貼清膜","5mm強化清玻貼砂膜"].includes(material)?"5GLASS":"5SF";
@@ -307,7 +399,8 @@ function calcWage(master, area, jobType, floor=1, hasThreshold=false, isLType=fa
   if(!hasElevator&&floor>=4) list.push({label:`${floor}F樓層費`,amt:(floor-3)*300});
   if(hasThreshold&&jobType!=="純配送") list.push({label:"裝新門檻",amt:200});
   if(hasThresholdReplace&&jobType!=="純配送") list.push({label:"拆舊裝新門檻",amt:500});
-  if(master.id==="qingyang"){ if(isLType)list.push({label:"L型二門",amt:200}); if(hasFixedPlate)list.push({label:"固定片",amt:200}); }
+  if(isLType)list.push({label:"L型二門",amt:200});
+  if(hasFixedPlate)list.push({label:"固定片",amt:200});
   (extras||[]).forEach(amt=>list.push({label:`加項$${amt}`,amt}));
   if(extraCustom) list.push({label:`自填$${extraCustom}`,amt:Number(extraCustom)});
   const ext=list.reduce((s,x)=>s+x.amt,0);
@@ -423,7 +516,7 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   const base=cfg.prices[matKey]?.[colKey]??0;
   const surW=cfg.surW[matKey]??0,surH=cfg.surH[matKey]??0;
   let extraW=0,extraH=0;
-  if(cfg.isL){extraW=(Math.ceil(Math.max(0,wR-cfg.stdW)/100)+Math.ceil(Math.max(0,(wR2||0)-cfg.stdW)/100))*surW;}
+  if(cfg.isL||cfg.isArc){extraW=(Math.ceil(Math.max(0,wR-cfg.stdW)/100)+Math.ceil(Math.max(0,(wR2||0)-cfg.stdW)/100))*surW;}
   else{extraW=Math.ceil(Math.max(0,wR-cfg.stdW)/100)*surW;}
   if(!cfg.isArc){extraH=Math.ceil(Math.max(0,hR-cfg.stdH)/100)*surH;}
   let prod=base+extraW+extraH;
@@ -438,7 +531,7 @@ function calcFramed({doorType,material,color,wMm,hMm,wMm2,hasThreshold,threshold
   const towelPrice=(towelBar||0)*200;
   const feeKey=installType==="含拆舊"?"拆裝":installType==="純寄送"?null:"安裝";
   const installFeeBase=feeKey?INSTALL_MAP[master]?.[region]?.[feeKey]??0:0;
-  const shipSurcharge=(master==="余青陽"||master==="郭師傅")&&feeKey?500:0;
+  const shipSurcharge=((master==="余青陽"||master==="郭師傅")&&feeKey?500:0)+(master==="賴彥銘"&&feeKey&&doorType==="圓弧型"?500:0);
   const installFee=installFeeBase+shipSurcharge;
   const floorFee=!hasElevator&&floor>=4?(floor-3)*300:0;
   const thrInstall=hasThreshold?200:0;
@@ -614,7 +707,7 @@ function DoorItemForm({item,idx,floor,elev,fpFee,master,region,onUpdate,onRemove
   );
 }
 
-function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct,isShipping,clientName,shipDate,onClose}){
+function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct,isShipping,clientName,shipDate,onClose,floorNote}){
   const ref=useRef(null);
   const today=new Date();
   const dateStr=`${today.getFullYear()-1911}/${String(today.getMonth()+1).padStart(2,"0")}/${String(today.getDate()).padStart(2,"0")}`;
@@ -687,6 +780,7 @@ function WorkOrderModal({items,results,custName,phone,addr,master,region,wDeduct
                 </div>
                 <div style={{marginBottom:2}}>{sizeLine}</div>
                 {deductLine&&<div style={{marginBottom:2,color:"#333"}}>{deductLine}</div>}
+                {order.floorNote&&<div style={{marginBottom:2}}>樓層：{order.floorNote}</div>}
                 {!isFixedPlate&&item.hasThr&&thrMmVal>0&&<div style={{marginBottom:2}}>鋁門檻 W{(thrMmVal/10)} × 1支</div>}
                 {isFixedPlate&&item.fpAngle&&<div style={{marginBottom:2}}>{item.fpAngle}</div>}
               </div>
@@ -741,7 +835,10 @@ function QuotationSystem({onCreateOrder}){
       if(item.cat==="有框")return`${item.dt}（${item.col}）${item.mat} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}${item.direction?" "+item.direction:""}`;
       return`${item.dt} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}`;
     }).join("、");
-    const order={cust:q.custName||"",phone:q.custPhone||"",addr:q.addr||"",master:q.master,region:q.region,wDeduct:0,note:`報價金額 $${fmtMoney(q.grandTotal)}`,scheduled:false,ordered:false,product:productDesc,shipMethod:q.master==="進南貨運"?"寄進南":q.master==="自取"?"自取":q.master==="賴彥銘"?"載":q.master==="郭師傅"&&q.region==="台南"?"寄台南站址":q.master==="郭師傅"?"寄高雄站址":"寄松成",quoteItems:q.items.map(item=>({...item,cat:item.cat||"有框"})),orderDate:new Date().toISOString().slice(0,10)};
+    const hasLType3=!!(q.items||[]).some(it=>it.dt==="L型二門");
+    const hasOtherDoor3=!!(q.items||[]).some(it=>it.dt!=="固定片"&&it.cat!=="加購品");
+    const hasFP3=!!(q.items||[]).some(it=>it.dt==="固定片");
+    const order={cust:q.custName||"",phone:q.custPhone||"",addr:q.addr||"",master:q.master,region:q.region,wDeduct:0,note:`報價金額 $${fmtMoney(q.grandTotal)}`,scheduled:false,ordered:false,product:productDesc,shipMethod:q.master==="進南貨運"?"寄進南":q.master==="自取"?"自取":q.master==="賴彥銘"?"載":q.master==="郭師傅"&&q.region==="台南"?"寄台南站址":q.master==="郭師傅"?"寄高雄站址":"寄松成",quoteItems:q.items.map(item=>({...item,cat:item.cat||"有框"})),orderDate:new Date().toISOString().slice(0,10),isLType:hasLType3,hasFixedPlate:hasOtherDoor3&&hasFP3};
     onCreateOrder(order);
     const updated={...q,status:"已轉訂單",convertedAt:new Date().toISOString().slice(0,10)};
     setQuotes(p=>p.map(x=>x.id===q.id?updated:x));
@@ -892,6 +989,9 @@ function QuotationSystem({onCreateOrder}){
       if(item.cat==="有框")return`${item.dt}（${item.col}）${item.mat} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}${item.direction?" "+item.direction:""}`;
       return`${item.dt} W${Math.round(item.wMm/10)}×H${Math.round(item.hMm/10)}`;
     }).join("、");
+    const hasLType4=items.some(it=>it.dt==="L型二門");
+    const hasOtherDoor4=items.some(it=>it.dt!=="固定片"&&it.cat!=="加購品");
+    const hasFP4=items.some(it=>it.dt==="固定片");
     const order={
       cust:custName||"",phone:custPhone||"",custLine,addr:addr||"",
       master,region,wDeduct:0,
@@ -900,6 +1000,8 @@ function QuotationSystem({onCreateOrder}){
       product:productDesc,
       shipDate:"",shipMethod:master==="進南貨運"?"寄進南":master==="自取"?"自取":"寄松成",
       quoteItems:items.map(item=>({...item,cat:item.cat||"有框"})),
+      isLType:hasLType4,
+      hasFixedPlate:hasOtherDoor4&&hasFP4,
     };
     onCreateOrder(order);setConverted(true);setTimeout(()=>setConverted(false),3000);
   }
@@ -1367,7 +1469,10 @@ function OrderForm({order,defaultDate,pendingOrders=[],onSave,onClose,onDelete})
     const addr=p.addr||p.address||"";
     const det=detectArea(addr,"qingyang")||detectArea(addr,"laiyanming")||detectArea(addr,"guo");
     const masterId=addr.includes("台中")||addr.includes("彰化")||addr.includes("南投")?"laiyanming":addr.includes("台南")||addr.includes("高雄")||addr.includes("屏東")?"guo":"qingyang";
-    setForm(f=>({...f,customer:p.cust||p.customer||"",phone:p.phone||"",address:addr,product:p.product||"",masterId,area:det||Object.keys(MASTERS[masterId].areas)[0],linkedOrderId:p.id,hasElevator:p.elev||null}));
+    const hasLType=!!(p.quoteItems||[]).some(qi=>qi.dt==="L型二門");
+    const hasOtherDoor=!!(p.quoteItems||[]).some(qi=>qi.dt!=="固定片"&&qi.cat!=="加購品");
+    const hasFP=!!(p.quoteItems||[]).some(qi=>qi.dt==="固定片");
+    setForm(f=>({...f,customer:p.cust||p.customer||"",phone:p.phone||"",address:addr,product:p.product||"",masterId,area:det||Object.keys(MASTERS[masterId].areas)[0],linkedOrderId:p.id,hasElevator:p.elev||null,isLType:hasLType,hasFixedPlate:hasOtherDoor&&hasFP}));
     setShowOrderSearch(false);setOrderSearch("");
   }
   return(
@@ -1902,7 +2007,7 @@ function PendingOrdersTab({pendingOrders,onEdit,onDelete,onToggleOrdered}){
       {workOrderItem&&(()=>{
         const clientName=workOrderItem.clientName||genClientName(workOrderItem.master||"余青陽",workOrderItem.cust||workOrderItem.customer||"",workOrderItem.region||"",workOrderItem.addr||workOrderItem.address||"");
         const isShip=workOrderItem.master==="進南貨運";
-        return<WorkOrderModal items={(workOrderItem.quoteItems||[]).map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:workOrderItem.wDeduct||0,hDeduct:workOrderItem.hDeduct||0}))} results={(workOrderItem.quoteItems||[]).map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={workOrderItem.cust||workOrderItem.customer||""} phone={workOrderItem.phone||""} addr={workOrderItem.addr||workOrderItem.address||""} master={workOrderItem.master||"余青陽"} region={workOrderItem.region||""} wDeduct={workOrderItem.wDeduct||0} isShipping={isShip} clientName={clientName} shipDate={workOrderItem.shipDate||""} onClose={()=>setWorkOrderItem(null)}/>;
+        return<WorkOrderModal items={(workOrderItem.quoteItems||[]).map(qi=>({...qi,id:qi.wMm+qi.hMm+qi.dt,cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:workOrderItem.wDeduct||0,hDeduct:workOrderItem.hDeduct||0}))} results={(workOrderItem.quoteItems||[]).map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}))} custName={workOrderItem.cust||workOrderItem.customer||""} phone={workOrderItem.phone||""} addr={workOrderItem.addr||workOrderItem.address||""} master={workOrderItem.master||"余青陽"} region={workOrderItem.region||""} wDeduct={workOrderItem.wDeduct||0} isShipping={isShip} clientName={clientName} shipDate={workOrderItem.shipDate||""} floorNote={workOrderItem.floorNote||""} onClose={()=>setWorkOrderItem(null)}/>;
       })()}
     </div>
   );
@@ -1913,6 +2018,7 @@ function PendingOrderForm({order,onSave,onClose}){
   const todayStr2=new Date().toISOString().slice(0,10);
   const initForm=order?{
     shopMode:order.shopMode||"官網",
+    floorNote:order.floorNote||"",
     cust:order.cust||order.customer||"",
     phone:order.phone||"",
     addr:order.addr||order.address||"",
@@ -2004,6 +2110,7 @@ function PendingOrderForm({order,onSave,onClose}){
             <div><label style={lbl}>W扣尺寸</label><select value={form.wDeduct||0} onChange={e=>set("wDeduct",Number(e.target.value))} onKeyDown={onEnterNext} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
             <div><label style={lbl}>H扣尺寸</label><select value={form.hDeduct||0} onChange={e=>set("hDeduct",Number(e.target.value))} onKeyDown={onEnterNext} style={sel}>{["0","0.5","1","1.5","2"].map(v=><option key={v} value={v}>{v===0||v==="0"?"不扣":"-"+v+"cm"}</option>)}</select></div>
           </div>
+          <div><label style={lbl}>樓層</label><input value={form.floorNote||""} onChange={e=>set("floorNote",e.target.value)} onKeyDown={onEnterNext} style={inp} placeholder="例：4樓無電梯"/></div>
           <div><label style={lbl}>客單名稱</label><input value={form.clientName!==undefined?form.clientName:clientName} onChange={e=>set("clientName",e.target.value)} style={inp} placeholder={clientName}/></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             <div><label style={lbl}>預計出貨日</label><input value={form.shipDate||""} onChange={e=>set("shipDate",e.target.value)} style={inp} placeholder="5/6"/></div>
@@ -2047,7 +2154,7 @@ function PendingOrderForm({order,onSave,onClose}){
         const woItems=(form.quoteItems&&form.quoteItems.length>0?form.quoteItems:[]).map(qi=>({...qi,id:(qi.wMm||0)+(qi.hMm||0)+(qi.dt||""),cat:qi.dt==="固定片"?"有框":qi.cat||"有框",wDeductItem:form.wDeduct||0,hDeduct:form.hDeduct||0}));
         const woResults=woItems.map(()=>({productPrice:0,installFee:0,floorFee:0,total:0}));
         const woClientName=form.clientName!==undefined?form.clientName:clientName;
-        return<WorkOrderModal items={woItems} results={woResults} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={woClientName} shipDate={form.shipDate||""} onClose={()=>setShowWO(false)}/>;
+        return<WorkOrderModal items={woItems} results={woResults} custName={form.cust||""} phone={form.phone||""} addr={form.addr||""} master={form.master||"余青陽"} region={form.region||""} wDeduct={form.wDeduct||0} isShipping={isShip} clientName={woClientName} shipDate={form.shipDate||""} floorNote={form.floorNote||""} onClose={()=>setShowWO(false)}/>;
       })()}
     </Modal>
   );
